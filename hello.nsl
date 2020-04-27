@@ -1,0 +1,7 @@
+declare hello simulation {
+
+}
+
+module hello {
+    _finish("Hello World!");
+}
