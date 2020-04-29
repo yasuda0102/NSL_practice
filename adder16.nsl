@@ -1,0 +1,11 @@
+// 16bit unsigned adder
+
+#include "declaration.nsl"
+
+module adder16 {
+    wire result[17];
+
+    result = a + b;
+    c = result[15:0];
+    carry = result[16];
+}

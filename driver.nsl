@@ -1,0 +1,15 @@
+// Driver for adder16
+
+#include "declaration.nsl"
+
+declare driver simulation {
+
+}
+
+module driver {
+    adder16 adder;
+
+    adder.a = 0xffff;
+    adder.b = 0x0001;
+    _finish("carry = %x, result = %x", adder.carry, adder.c);
+}
