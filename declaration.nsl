@@ -1,6 +1,13 @@
-declare adder16 {
-    input a[16];
-    input b[16];
-    output c[16];
+declare adder32 {
+    input a[32];
+    input b[32];
+    output c[32];
     output carry;
+}
+
+declare shifter {
+    input inp[32];
+    output result[32];
+    input arithmetic;
+    input num[6]; // 0～32bitまでのシフトに対応
 }

@@ -7,9 +7,9 @@ declare driver simulation {
 }
 
 module driver {
-    adder16 adder;
+    adder32 adder;
 
-    adder.a = 0xffff;
-    adder.b = 0x0001;
+    adder.a = 0xffffffff;
+    adder.b = 0x00000001;
     _finish("carry = %x, result = %x", adder.carry, adder.c);
 }

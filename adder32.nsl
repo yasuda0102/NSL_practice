@@ -1,0 +1,11 @@
+// 32bit unsigned adder
+
+#include "declaration.nsl"
+
+module adder32 {
+    wire result[33];
+
+    result = a + b;
+    c = result[31:0];
+    carry = result[32];
+}
