@@ -8,7 +8,7 @@ NSL練習用のリポジトリです。CPUが書けるようになりたい。
 nsl2vlは[オーバートーン株式会社のダウンロードページ](http://www.overtone.co.jp/support/downloads/)からダウンロードできます。個人情報を入力しないといけないけど。
 
 ```
-nsl2vl adder16.nsl
+nsl2vl adder32.nsl
 nsl2vl driver.nsl -target driver -verisim2
 ```
 
@@ -21,6 +21,6 @@ Icarus Verilogが使える環境を想定しています。
 また、キャリービットが立ちます。
 
 ```
-iverilog adder16.nsl driver.nsl
+iverilog adder32.v driver.v
 vvp a.out
 ```
