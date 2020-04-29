@@ -9,18 +9,19 @@ nsl2vlは[オーバートーン株式会社のダウンロードページ](http:
 
 ```
 nsl2vl adder32.nsl
+nsl2vl shifter.nsl
 nsl2vl driver.nsl -target driver -verisim2
 ```
 
 ## シミュレーションの実行方法
 
-Icarus Verilogが使える環境を想定しています。
-以下の手順でシミュレーションを行ってください。
-加算器の2つのオペランドは0xffffと0x0001です。
-結果はオーバーフローし、0x0000となります。
-また、キャリービットが立ちます。
+Icarus Verilogが使える環境を想定しています。以下の手順でシミュレーションを行ってください。
 
 ```
-iverilog adder32.v driver.v
+iverilog adder32.v shifter.v driver.v
 vvp a.out
 ```
+
+## translate.sh
+
+iverilogまでを実行するシェルスクリプトがあります。そちらをご利用ください。

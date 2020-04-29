@@ -1,5 +1,40 @@
 // 32bit Logical/Arithmetic Shifter
 
-module shifter {
+#include "declaration.nsl"
 
+module shifter {
+    wire value[32];
+    wire bit[6];
+    wire ret[32];
+
+    func_self leftshiftL(value, bit) : ret;
+    func_self rightshiftL(value, bit) : ret;
+    func_self rightshiftA(value, bit) : ret;
+
+    any {
+        ~leftright && ~arithmetic:
+            leftshiftL(inp, num);
+
+        leftright && ~arithmetic:
+            rightshiftL(inp, num);
+
+        arithmetic:
+            rightshiftA(inp, num);
+    }
+
+    result = ret;
+
+    func leftshiftL {
+        return inp << bit;
+    }
+
+    func rightshiftL {
+        return inp >> bit;
+    }
+
+    func rightshiftA {
+        // まだ未完成
+        
+        return inp;
+    }
 }

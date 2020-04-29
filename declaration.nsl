@@ -1,13 +1,17 @@
 declare adder32 {
-    input a[32];
-    input b[32];
-    output c[32];
-    output carry;
+    input a[32];  // 左項
+    input b[32];  // 右項
+    output c[32]; // 演算結果
+    output carry; // キャリービット
 }
 
 declare shifter {
-    input inp[32];
-    output result[32];
-    input arithmetic;
-    input num[6]; // 0～32bitまでのシフトに対応
+    input inp[32];     // 入力
+    output result[32]; // 演算結果
+
+    input arithmetic; // 0: 論理シフト
+                      // 1: 算術シフト
+    input num[6];     // 0～32bitまでのシフトに対応
+    input leftright;  // 0: 左シフト
+                      // 1: 右シフト
 }

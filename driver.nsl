@@ -8,8 +8,15 @@ declare driver simulation {
 
 module driver {
     adder32 adder;
+    shifter s32;
 
     adder.a = 0xffffffff;
     adder.b = 0x00000001;
-    _finish("carry = %x, result = %x", adder.carry, adder.c);
+    _display("carry = %x, result = %x", adder.carry, adder.c);
+
+    s32.inp = 0xffffffff;
+    s32.arithmetic = 0b0;
+    s32.num = 8;
+    s32.leftright = 0b1;
+    _finish("%x", s32.result);
 }
