@@ -9,9 +9,20 @@ declare driver simulation {
 module driver {
     adder32 adder;
     shifter s32;
+    multiplier32 m32;
 
-    _display("carry = %x, result = %x", adder.carry, adder.add(0xffffffff, 0x00000001));
+    func_self test();
 
-    _finish("%x", s32.shiftRightA(0x7fffffff, 5));
-    //_finish("%x", s32.shiftRightL(0xffffffff, 4));
+    test();
+
+    func test {
+        _display("carry = %x, result = %x", adder.carry, adder.add(0xffffffff, 0x00000001));
+
+        // 0x09d5c2eba3d6ac00‬
+        _display("%x", m32.multiply(0x147d2698, 0x7ae26480));
+
+        // 03ffffff
+        _finish("%x", s32.shiftRightA(0x7fffffff, 5));
+        //_finish("%x", s32.shiftRightL(0xffffffff, 4));
+    }
 }

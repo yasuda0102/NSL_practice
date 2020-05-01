@@ -4,7 +4,7 @@ declare adder32 {
     output c[32]; // 演算結果
     output carry; // キャリービット
 
-    // 加算する関数
+    // 32bit整数同士を加算する関数
     func_in add(a, b) : c;
 }
 
@@ -21,4 +21,13 @@ declare shifter {
 
     // inpをnumだけ算術右シフトする関数
     func_in shiftRightA(inp, num) : result;
+}
+
+declare multiplier32 {
+    input a[32];
+    input b[32];
+    output result[64];
+
+    // 32bit整数同士を乗算して64bit整数値を返す関数
+    func_in multiply(a, b) : result;
 }

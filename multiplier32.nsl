@@ -1,0 +1,9 @@
+// 32bit Multiplier
+
+#include "declaration.nsl"
+
+module multiplier32 {
+    func multiply {
+        return a * b;
+    }
+}
