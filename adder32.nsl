@@ -3,9 +3,11 @@
 #include "declaration.nsl"
 
 module adder32 {
-    wire result[33];
+    func add {
+        wire tmp[33];
 
-    result = a + b;
-    c = result[31:0];
-    carry = result[32];
+        tmp = a + b;
+        carry = tmp[32];
+        return tmp[31:0];
+    }
 }

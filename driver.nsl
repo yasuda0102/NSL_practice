@@ -10,9 +10,7 @@ module driver {
     adder32 adder;
     shifter s32;
 
-    adder.a = 0xffffffff;
-    adder.b = 0x00000001;
-    _display("carry = %x, result = %x", adder.carry, adder.c);
+    _display("carry = %x, result = %x", adder.carry, adder.add(0xffffffff, 0x00000001));
 
     _finish("%x", s32.shiftRightA(0x7fffffff, 5));
     //_finish("%x", s32.shiftRightL(0xffffffff, 4));

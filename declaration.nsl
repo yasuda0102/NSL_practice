@@ -3,6 +3,9 @@ declare adder32 {
     input b[32];  // 右項
     output c[32]; // 演算結果
     output carry; // キャリービット
+
+    // 加算する関数
+    func_in add(a, b) : c;
 }
 
 declare shifter {
