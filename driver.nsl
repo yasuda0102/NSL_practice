@@ -14,9 +14,6 @@ module driver {
     adder.b = 0x00000001;
     _display("carry = %x, result = %x", adder.carry, adder.c);
 
-    s32.inp = 0xffffffff;
-    s32.arithmetic = 0b0;
-    s32.num = 8;
-    s32.leftright = 0b1;
-    _finish("%x", s32.result);
+    _finish("%x", s32.shiftRightA(0x7fffffff, 5));
+    //_finish("%x", s32.shiftRightL(0xffffffff, 4));
 }

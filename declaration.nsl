@@ -6,12 +6,16 @@ declare adder32 {
 }
 
 declare shifter {
-    input inp[32];     // 入力
+    input inp[32];     // シフトしたい32bit値
+    input num[6];      // 0～32bitまでのシフトに対応
     output result[32]; // 演算結果
 
-    input arithmetic; // 0: 論理シフト
-                      // 1: 算術シフト
-    input num[6];     // 0～32bitまでのシフトに対応
-    input leftright;  // 0: 左シフト
-                      // 1: 右シフト
+    // inpをnumだけ論理左シフトする関数
+    func_in shiftLeftL(inp, num) : result;
+
+    // inpをnumだけ論理右シフトする関数
+    func_in shiftRightL(inp, num) : result;
+
+    // inpをnumだけ算術右シフトする関数
+    func_in shiftRightA(inp, num) : result;
 }

@@ -3,38 +3,114 @@
 #include "declaration.nsl"
 
 module shifter {
-    wire value[32];
-    wire bit[6];
-    wire ret[32];
-
-    func_self leftshiftL(value, bit) : ret;
-    func_self rightshiftL(value, bit) : ret;
-    func_self rightshiftA(value, bit) : ret;
-
-    any {
-        ~leftright && ~arithmetic:
-            leftshiftL(inp, num);
-
-        leftright && ~arithmetic:
-            rightshiftL(inp, num);
-
-        arithmetic:
-            rightshiftA(inp, num);
+    func shiftLeftL {
+        return inp << num;
     }
 
-    result = ret;
-
-    func leftshiftL {
-        return inp << bit;
+    func shiftRightL {
+        return inp >> num;
     }
 
-    func rightshiftL {
-        return inp >> bit;
-    }
+    func shiftRightA {
+        // バレルシフタ
+        wire a0[32];
+        wire b0[6];
+        wire a1[32];
+        wire b1[6];
+        wire a2[32];
+        wire b2[6];
+        wire a3[32];
+        wire b3[6];
+        wire a4[32];
+        wire b4[6];
+        wire tmp0[32];
+        wire tmp1[32];
+        wire tmp2[32];
+        wire tmp3[32];
+        wire tmp4[32];
+        wire ret0[32];
+        wire ret1[32];
+        wire ret2[32];
+        wire ret3[32];
+        wire ret4[32];
 
-    func rightshiftA {
-        // まだ未完成
-        
-        return inp;
+        func_self shift1(a0, b0) : ret0;
+        func_self shift2(a1, b1) : ret1;
+        func_self shift4(a2, b2) : ret2;
+        func_self shift8(a3, b3) : ret3;
+        func_self shift16(a4, b4) : ret4;
+
+        tmp0 = shift1(inp, num);
+        tmp1 = shift2(tmp0, num);
+        tmp2 = shift4(tmp1, num);
+        tmp3 = shift8(tmp2, num);
+        tmp4 = shift16(tmp3, num);
+
+        return tmp4;
+
+        func shift1 {
+            wire tmpa[32];
+
+            if (b0[0]) {
+                if (a0[31]) tmpa = {0b1, (a0 >> 1)[30:0]};
+                else tmpa = {0b0, (a0 >> 1)[30:0]};
+            }
+            else {
+                tmpa = a0;
+            }
+            return tmpa;
+        }
+
+        func shift2 {
+            wire tmpb[32];
+
+            if (b1[1]) {
+                if (a1[31]) tmpb = {0b11, (a1 >> 2)[29:0]};
+                else tmpb = {0b00, (a1 >> 2)[29:0]};
+            }
+            else {
+                tmpb = a1;
+            }
+            return tmpb;
+        }
+
+        func shift4 {
+            wire tmpc[32];
+
+            if (b2[2]) {
+                if (a2[31]) tmpc = {0xf, (a2 >> 4)[27:0]};
+                else tmpc = {0x0, (a2 >> 4)[27:0]};
+            }
+            else {
+                tmpc = a2;
+            }
+            return tmpc;
+        }
+
+        func shift8 {
+            wire tmpd[32];
+
+            if (b3[3]) {
+                if (a3[31]) tmpd = {0xff, (a3 >> 8)[23:0]};
+                else tmpd = {0x00, (a3 >> 8)[23:0]};
+            }
+            else {
+                tmpd = a3;
+            }
+            return tmpd;
+        }
+
+        func shift16 {
+            wire tmpe[32];
+
+            if (b4[4]) {
+                if (a4[31]) tmpe = {0xffff, (a4 >> 16)[15:0]};
+                else tmpe = {0x0000, (a4 >> 16)[15:0]};
+            }
+            else {
+                tmpe = a4;
+            }
+            return tmpe;
+        }
     }
 }
