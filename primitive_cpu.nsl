@@ -1,0 +1,7 @@
+// Primitive 32bit CPU
+
+#include "declaration.nsl"
+
+module primitive_cpu {
+    
+}

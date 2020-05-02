@@ -8,6 +8,7 @@ declare driver simulation {
 
 module driver {
     regfile r32;
+    memory m64K;
 
     state_name wstateA, wstateB, rstate;
 
@@ -16,11 +17,13 @@ module driver {
 
     state wstateA {
         r32.write(0b00001, 0xfafafafa);
+        m64K.write(0x0000ffff, 0x29);
         goto wstateB;
     }
 
     state wstateB {
         r32.write(0b00010, 0xabababab);
+        m64K.write(0x00010000, 0x45);
         goto rstate;
     }
 
@@ -28,6 +31,7 @@ module driver {
         r32.read(0b00001, 0b00010);
         result1 = r32.rdataA;
         result2 = r32.rdataB;
+        _display("memory: %x", m64K.read(0x00010000));
         _finish("Register 1: %x, Register 2: %x", result1, result2);
     }
 }

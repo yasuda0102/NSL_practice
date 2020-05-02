@@ -74,3 +74,19 @@ declare regfile {
     // 2つのレジスタの値を読む関数
     func_in read(raddrA, raddrB);
 }
+
+declare memory {
+    input addr[32];     // アドレス
+    input wdata[8];    // writeするデータ
+    output rdata[8];   // readデータ
+
+    // 特定のアドレスに1バイト書き込む関数
+    func_in write(addr, wdata);
+
+    // 特定のアドレスから1バイト取得する関数
+    func_in read(addr) : rdata;
+}
+
+declare primitive_cpu {
+
+}
