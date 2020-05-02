@@ -1,0 +1,78 @@
+// 32bit Arithmetic Logic Unit
+
+#include "declaration.nsl"
+
+module alu32 {
+    adder32 a32;
+    wire inv[32];
+    wire res[32];
+    wire tmp[32];
+    wire minus[32];
+
+    func_self invert(inv) : res;
+
+    func exec {
+        any {
+            // No Operation
+            opcode == NOP: {
+                tmp = 0x00000000;
+                status = 0b0000;
+
+                return tmp;
+            }
+
+            // ADD
+            opcode == ADD: {
+                tmp = a32.add(opA, opB);
+                status = {0b000, a32.carry};
+
+                return tmp;
+            }
+
+            // SUB
+            opcode == SUB: {
+                minus = invert(opB) + 0x00000001;
+                tmp = a32.add(opA, minus);
+                status = {0b000, a32.carry};
+
+                return tmp;
+            }
+
+            // AND
+            opcode == AND: {
+                tmp = opA & opB;
+                status = 0b0000;
+
+                return tmp;
+            }
+
+            // OR
+            opcode == OR: {
+                tmp = opA | opB;
+                status = 0b0000;
+
+                return tmp;
+            }
+
+            // XOR
+            opcode == XOR: {
+                tmp = opA ^ opB;
+                status = 0b0000;
+
+                return tmp;
+            }
+
+            // その他のオペコードが来た場合はNOPとみなす
+            else : {
+                tmp = 0x00000000;
+                status = 0b0000;
+
+                return tmp;
+            }
+        }
+    }
+
+    func invert {
+        return ~inv; 
+    }
+}

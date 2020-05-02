@@ -31,3 +31,29 @@ declare multiplier32 {
     // 32bit整数同士を乗算して64bit整数値を返す関数
     func_in multiply(a, b) : result;
 }
+
+#define NOP 0b0000
+#define ADD 0b0001
+#define SUB 0b0010
+#define AND 0b0011
+#define OR  0b0100
+#define XOR 0b0101
+
+declare alu32 {
+    input opcode[4];   // 0b0000: No Operation
+                       // 0b0001: ADD
+                       // 0b0010: SUB
+                       // 0b0011: AND
+                       // 0b0100: OR
+                       // 0b0101: XOR
+                       // その他: Reserved
+    input opA[32];     // オペランドA
+    input opB[32];     // オペランドB
+    output result[32]; // 演算結果
+    output status[4];  // 出力ステータス
+                       // 0b0000: キャリービット
+                       // その他: Reserved
+    
+    // 命令を実行する関数
+    func_in exec(opcode, opA, opB) : result;
+}
