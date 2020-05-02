@@ -15,6 +15,7 @@ module dpram(
     input we2;
 
     reg [7:0] mem [65535:0];
+    integer i;
 
     always @(posedge m_clock) begin
         if (we1) begin
@@ -31,6 +32,12 @@ module dpram(
             mem[addr2 + 1] <= wdata2[15:0];
             mem[addr2 + 2] <= wdata2[23:16];
             mem[addr2 + 3] <= wdata2[31:24];
+        end
+    end
+
+    initial begin
+        for (i = 0; i < 65535; i++) begin
+            mem[i] = 32'h00000000;
         end
     end
 

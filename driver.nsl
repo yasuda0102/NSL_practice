@@ -12,7 +12,7 @@ module driver {
     reg count[8] = 0;
 
     count++;
-    if (count == 2) _finish("Simulation End");
+    if (count == 100) _finish("Simulation End");
 
     func cpu.write {
         m64K.addr1 = cpu.addr1;
