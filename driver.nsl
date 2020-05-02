@@ -7,9 +7,16 @@ declare driver simulation {
 }
 
 module driver {
-    regfile r32;
+    // regfile r32;
     memory m64K;
+    reg addr[32] = 0x00000000;
+    reg addr2[32] = 0x00000000;
+    reg data[8] = 0x00;
+    reg data_bak[8] = 0x00;
+    reg i[6] = 0;
+    wire tmp[8];
 
+/*
     state_name wstateA, wstateB, rstate;
 
     wire result1[32];
@@ -33,5 +40,27 @@ module driver {
         result2 = r32.rdataB;
         _display("memory: %x", m64K.read(0x00010000));
         _finish("Register 1: %x, Register 2: %x", result1, result2);
+    }
+*/
+
+    proc_name write(addr, data);
+    proc_name read(addr2);
+
+    if (i == 0) write(_random, _random[7:0]);
+    if (i++ == 63) _finish("Simulation End");
+
+    proc write {
+        m64K.write(addr, data);
+        data_bak := data;
+        
+        read(addr);
+    }
+
+    proc read {
+        tmp = m64K.read(addr2);
+        _display("%x: %x", addr2, tmp);
+        if (tmp == data_bak) _display("OK!\n");
+
+        write(_random, _random[7:0]);
     }
 }
