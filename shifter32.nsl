@@ -2,7 +2,7 @@
 
 #include "declaration.nsl"
 
-module shifter {
+module shifter32 {
     func shiftLeftL {
         return inp << num;
     }

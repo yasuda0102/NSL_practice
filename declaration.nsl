@@ -8,7 +8,7 @@ declare adder32 {
     func_in add(a, b) : c;
 }
 
-declare shifter {
+declare shifter32 {
     input inp[32];     // シフトしたい32bit値
     input num[6];      // 0～32bitまでのシフトに対応
     output result[32]; // 演算結果
