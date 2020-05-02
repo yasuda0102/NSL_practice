@@ -1,0 +1,144 @@
+// 32bit Register File
+// This contains 31 registers.
+
+#include "declaration.nsl"
+
+module regfile {
+    reg r1[32];
+    reg r2[32];
+    reg r3[32];
+    reg r4[32];
+    reg r5[32];
+    reg r6[32];
+    reg r7[32];
+    reg r8[32];
+    reg r9[32];
+    reg r10[32];
+    reg r11[32];
+    reg r12[32];
+    reg r13[32];
+    reg r14[32];
+    reg r15[32];
+    reg r16[32];
+    reg r17[32];
+    reg r18[32];
+    reg r19[32];
+    reg r20[32];
+    reg r21[32];
+    reg r22[32];
+    reg r23[32];
+    reg r24[32];
+    reg r25[32];
+    reg r26[32];
+    reg r27[32];
+    reg r28[32];
+    reg r29[32];
+    reg r30[32];
+    reg r31[32];
+
+    func write {
+        any {
+            waddr == 0b00001: r1 := wdata;
+            waddr == 0b00010: r2 := wdata;
+            waddr == 0b00011: r3 := wdata;
+            waddr == 0b00100: r4 := wdata;
+            waddr == 0b00101: r5 := wdata;
+            waddr == 0b00110: r6 := wdata;
+            waddr == 0b00111: r7 := wdata;
+            waddr == 0b01000: r8 := wdata;
+            waddr == 0b01001: r9 := wdata;
+            waddr == 0b01010: r10 := wdata;
+            waddr == 0b01011: r11 := wdata;
+            waddr == 0b01100: r12 := wdata;
+            waddr == 0b01101: r13 := wdata;
+            waddr == 0b01110: r14 := wdata;
+            waddr == 0b01111: r15 := wdata;
+            waddr == 0b10000: r16 := wdata;
+            waddr == 0b10001: r17 := wdata;
+            waddr == 0b10010: r18 := wdata;
+            waddr == 0b10011: r19 := wdata;
+            waddr == 0b10100: r20 := wdata;
+            waddr == 0b10101: r21 := wdata;
+            waddr == 0b10110: r22 := wdata;
+            waddr == 0b10111: r23 := wdata;
+            waddr == 0b11000: r24 := wdata;
+            waddr == 0b11001: r25 := wdata;
+            waddr == 0b11010: r26 := wdata;
+            waddr == 0b11011: r27 := wdata;
+            waddr == 0b11100: r28 := wdata;
+            waddr == 0b11101: r29 := wdata;
+            waddr == 0b11110: r30 := wdata;
+            waddr == 0b11111: r31 := wdata;
+        }
+    }
+
+    func read {
+        any {
+            raddrA == 0b00000: rdataA = 0x00000000;
+            raddrA == 0b00001: rdataA = r1;
+            raddrA == 0b00010: rdataA = r2;
+            raddrA == 0b00011: rdataA = r3;
+            raddrA == 0b00100: rdataA = r4;
+            raddrA == 0b00101: rdataA = r5;
+            raddrA == 0b00110: rdataA = r6;
+            raddrA == 0b00111: rdataA = r7;
+            raddrA == 0b01000: rdataA = r8;
+            raddrA == 0b01001: rdataA = r9;
+            raddrA == 0b01010: rdataA = r10;
+            raddrA == 0b01011: rdataA = r11;
+            raddrA == 0b01100: rdataA = r12;
+            raddrA == 0b01101: rdataA = r13;
+            raddrA == 0b01110: rdataA = r14;
+            raddrA == 0b01111: rdataA = r15;
+            raddrA == 0b10000: rdataA = r16;
+            raddrA == 0b10001: rdataA = r17;
+            raddrA == 0b10010: rdataA = r18;
+            raddrA == 0b10011: rdataA = r19;
+            raddrA == 0b10100: rdataA = r20;
+            raddrA == 0b10101: rdataA = r21;
+            raddrA == 0b10110: rdataA = r22;
+            raddrA == 0b10111: rdataA = r23;
+            raddrA == 0b11000: rdataA = r24;
+            raddrA == 0b11001: rdataA = r25;
+            raddrA == 0b11010: rdataA = r26;
+            raddrA == 0b11011: rdataA = r27;
+            raddrA == 0b11100: rdataA = r28;
+            raddrA == 0b11101: rdataA = r29;
+            raddrA == 0b11110: rdataA = r30;
+            raddrA == 0b11111: rdataA = r31;
+
+            raddrB == 0b00000: rdataB = 0x00000000;
+            raddrB == 0b00001: rdataB = r1;
+            raddrB == 0b00010: rdataB = r2;
+            raddrB == 0b00011: rdataB = r3;
+            raddrB == 0b00100: rdataB = r4;
+            raddrB == 0b00101: rdataB = r5;
+            raddrB == 0b00110: rdataB = r6;
+            raddrB == 0b00111: rdataB = r7;
+            raddrB == 0b01000: rdataB = r8;
+            raddrB == 0b01001: rdataB = r9;
+            raddrB == 0b01010: rdataB = r10;
+            raddrB == 0b01011: rdataB = r11;
+            raddrB == 0b01100: rdataB = r12;
+            raddrB == 0b01101: rdataB = r13;
+            raddrB == 0b01110: rdataB = r14;
+            raddrB == 0b01111: rdataB = r15;
+            raddrB == 0b10000: rdataB = r16;
+            raddrB == 0b10001: rdataB = r17;
+            raddrB == 0b10010: rdataB = r18;
+            raddrB == 0b10011: rdataB = r19;
+            raddrB == 0b10100: rdataB = r20;
+            raddrB == 0b10101: rdataB = r21;
+            raddrB == 0b10110: rdataB = r22;
+            raddrB == 0b10111: rdataB = r23;
+            raddrB == 0b11000: rdataB = r24;
+            raddrB == 0b11001: rdataB = r25;
+            raddrB == 0b11010: rdataB = r26;
+            raddrB == 0b11011: rdataB = r27;
+            raddrB == 0b11100: rdataB = r28;
+            raddrB == 0b11101: rdataB = r29;
+            raddrB == 0b11110: rdataB = r30;
+            raddrB == 0b11111: rdataB = r31;
+        }
+    }
+}

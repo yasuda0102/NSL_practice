@@ -1,4 +1,4 @@
-// Driver for adder16
+// Driver for module test
 
 #include "declaration.nsl"
 
@@ -7,22 +7,27 @@ declare driver simulation {
 }
 
 module driver {
-    alu32 a32;
-    shifter s32;
-    multiplier32 m32;
+    regfile r32;
 
-    func_self test();
+    state_name wstateA, wstateB, rstate;
 
-    test();
+    wire result1[32];
+    wire result2[32];
 
-    func test {
-        _display("ALU output: %x", a32.exec(XOR, 0x0000000f, 0x00000001));
+    state wstateA {
+        r32.write(0b00001, 0xfafafafa);
+        goto wstateB;
+    }
 
-        // 0x09d5c2eba3d6ac00‬
-        _display("Multiplier output: %x", m32.multiply(0x147d2698, 0x7ae26480));
+    state wstateB {
+        r32.write(0b00010, 0xabababab);
+        goto rstate;
+    }
 
-        // 03ffffff
-        _finish("Shifter output: %x", s32.shiftRightA(0x7fffffff, 5));
-        //_finish("%x", s32.shiftRightL(0xffffffff, 4));
+    state rstate {
+        r32.read(0b00001, 0b00010);
+        result1 = r32.rdataA;
+        result2 = r32.rdataB;
+        _finish("Register 1: %x, Register 2: %x", result1, result2);
     }
 }

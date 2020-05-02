@@ -57,3 +57,20 @@ declare alu32 {
     // 命令を実行する関数
     func_in exec(opcode, opA, opB) : result;
 }
+
+declare regfile {
+    input raddrA[5];    // readするレジスタ番号A
+    input raddrB[5];    // readするレジスタ番号B
+                        // ※ 0を指定すると定数0x00000000を返す
+    input waddr[5];     // writeするレジスタ番号
+                        // ※ 0を指定すると無効
+    input wdata[32];    // writeするデータ
+    output rdataA[32];  // レジスタ番号Aのread結果
+    output rdataB[32];  // レジスタ番号Bのread結果
+
+    // 特定のレジスタに書き込む関数
+    func_in write(waddr, wdata);
+
+    // 2つのレジスタの値を読む関数
+    func_in read(raddrA, raddrB);
+}
