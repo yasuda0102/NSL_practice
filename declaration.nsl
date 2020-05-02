@@ -32,13 +32,6 @@ declare multiplier32 {
     func_in multiply(a, b) : result;
 }
 
-#define NOP 0b0000
-#define ADD 0b0001
-#define SUB 0b0010
-#define AND 0b0011
-#define OR  0b0100
-#define XOR 0b0101
-
 declare alu32 {
     input opcode[4];   // 0b0000: No Operation
                        // 0b0001: ADD
@@ -75,18 +68,41 @@ declare regfile {
     func_in read(raddrA, raddrB);
 }
 
-declare memory {
-    input addr[32];     // アドレス
-    input wdata[8];    // writeするデータ
-    output rdata[8];   // readデータ
-
-    // 特定のアドレスに1バイト書き込む関数
-    func_in write(addr, wdata);
-
-    // 特定のアドレスから1バイト取得する関数
-    func_in read(addr) : rdata;
+declare dpram {
+    input addr1[32];
+    input addr2[32];
+    input wdata1[32];
+    input wdata2[32];
+    output rdata1[32];
+    output rdata2[32];
+    input we1;
+    input we2;
 }
 
-declare primitive_cpu {
+// opcodeの定義
+#define LUI          0b0110111
+#define AUIPC        0b0010111
+#define JAL          0b1101111
+#define JALR         0b1100111
+#define CONDBRANCH   0b1100011
+#define LOAD         0b0000011
+#define STORE        0b0100011
+#define IARITHMETIC  0b0010011
+#define ARITHMETIC   0b0110011
+#define FENCE        0b0001111
+#define ECALL        0b1110011
+#define EBREAK       0b1110011
 
+declare primitive_cpu {
+    // デュアルポートメモリとのインタフェース
+    output addr1[32];    // アドレス1
+    output addr2[32];    // アドレス1
+    output wdata[32];    // writeするデータ
+    input rdata[32];     // readデータ
+
+    // 特定のアドレスに1バイト書き込む関数
+    func_out write(addr1, wdata);
+
+    // 特定のアドレスから1バイト取得する関数
+    func_out read(addr2) : rdata;
 }

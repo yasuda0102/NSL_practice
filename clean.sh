@@ -1,3 +1,6 @@
 #!/bin/bash
 
-rm *.v *.vcd a.out
+for FILE in `ls *.v a.out *.vcd | grep -e "[^dpram\.v]"`
+do
+    rm $FILE
+done

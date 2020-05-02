@@ -7,60 +7,23 @@ declare driver simulation {
 }
 
 module driver {
-    // regfile r32;
-    memory m64K;
-    reg addr[32] = 0x00000000;
-    reg addr2[32] = 0x00000000;
-    reg data[8] = 0x00;
-    reg data_bak[8] = 0x00;
-    reg i[6] = 0;
-    wire tmp[8];
+    primitive_cpu cpu;
+    dpram m64K;
+    reg count[8] = 0;
 
-/*
-    state_name wstateA, wstateB, rstate;
+    count++;
+    if (count == 2) _finish("Simulation End");
 
-    wire result1[32];
-    wire result2[32];
-
-    state wstateA {
-        r32.write(0b00001, 0xfafafafa);
-        m64K.write(0x0000ffff, 0x29);
-        goto wstateB;
+    func cpu.write {
+        m64K.addr1 = cpu.addr1;
+        m64K.wdata1 = cpu.wdata;
+        m64K.we1 = 0b1;
     }
 
-    state wstateB {
-        r32.write(0b00010, 0xabababab);
-        m64K.write(0x00010000, 0x45);
-        goto rstate;
-    }
-
-    state rstate {
-        r32.read(0b00001, 0b00010);
-        result1 = r32.rdataA;
-        result2 = r32.rdataB;
-        _display("memory: %x", m64K.read(0x00010000));
-        _finish("Register 1: %x, Register 2: %x", result1, result2);
-    }
-*/
-
-    proc_name write(addr, data);
-    proc_name read(addr2);
-
-    if (i == 0) write(_random, _random[7:0]);
-    if (i++ == 63) _finish("Simulation End");
-
-    proc write {
-        m64K.write(addr, data);
-        data_bak := data;
-        
-        read(addr);
-    }
-
-    proc read {
-        tmp = m64K.read(addr2);
-        _display("%x: %x", addr2, tmp);
-        if (tmp == data_bak) _display("OK!\n");
-
-        write(_random, _random[7:0]);
+    func cpu.read {
+        m64K.addr2 = cpu.addr2;
+        m64K.wdata2 = 0x00000000;
+        m64K.we2 = 0b0;
+        return m64K.rdata2;
     }
 }

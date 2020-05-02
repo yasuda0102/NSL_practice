@@ -14,7 +14,7 @@ module alu32 {
     func exec {
         any {
             // No Operation
-            opcode == NOP: {
+            opcode == 0b0000: {
                 tmp = 0x00000000;
                 status = 0b0000;
 
@@ -22,7 +22,7 @@ module alu32 {
             }
 
             // ADD
-            opcode == ADD: {
+            opcode == 0b0001: {
                 tmp = a32.add(opA, opB);
                 status = {0b000, a32.carry};
 
@@ -30,7 +30,7 @@ module alu32 {
             }
 
             // SUB
-            opcode == SUB: {
+            opcode == 0b0010: {
                 minus = invert(opB) + 0x00000001;
                 tmp = a32.add(opA, minus);
                 status = {0b000, a32.carry};
@@ -39,7 +39,7 @@ module alu32 {
             }
 
             // AND
-            opcode == AND: {
+            opcode == 0b0011: {
                 tmp = opA & opB;
                 status = 0b0000;
 
@@ -47,7 +47,7 @@ module alu32 {
             }
 
             // OR
-            opcode == OR: {
+            opcode == 0b0100: {
                 tmp = opA | opB;
                 status = 0b0000;
 
@@ -55,7 +55,7 @@ module alu32 {
             }
 
             // XOR
-            opcode == XOR: {
+            opcode == 0b0101: {
                 tmp = opA ^ opB;
                 status = 0b0000;
 
