@@ -44,7 +44,7 @@ declare alu32 {
     input opB[32];     // オペランドB
     output result[32]; // 演算結果
     output status[4];  // 出力ステータス
-                       // 0b0000: キャリービット
+                       // status[0]: キャリービット
                        // その他: Reserved
     
     // 命令を実行する関数
@@ -84,25 +84,24 @@ declare dpram {
 #define AUIPC        0b0010111
 #define JAL          0b1101111
 #define JALR         0b1100111
-#define CONDBRANCH   0b1100011
+#define BRANCH       0b1100011
 #define LOAD         0b0000011
 #define STORE        0b0100011
 #define IARITHMETIC  0b0010011
 #define ARITHMETIC   0b0110011
 #define FENCE        0b0001111
-#define ECALL        0b1110011
-#define EBREAK       0b1110011
+#define SYSTEM       0b1110011
 
 declare primitive_cpu {
     // デュアルポートメモリとのインタフェース
     output addr1[32];    // アドレス1
-    output addr2[32];    // アドレス1
+    output addr2[32];    // アドレス2
     output wdata[32];    // writeするデータ
     input rdata[32];     // readデータ
 
-    // 特定のアドレスに1バイト書き込む関数
+    // 特定のアドレスに4バイト書き込む関数
     func_out write(addr1, wdata);
 
-    // 特定のアドレスから1バイト取得する関数
+    // 特定のアドレスから4バイト取得する関数
     func_out read(addr2) : rdata;
 }

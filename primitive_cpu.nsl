@@ -1,67 +1,53 @@
 // Primitive 32bit CPU
 
+// デコードした命令を格納 (inst_*)
+// 0b000000: NOP
+// 0b000001: LUI
+// 0b000010: AUIPC
+// 0b000011: JAL
+// 0b000100: JALR
+// 0b000101: BEQ
+// 0b000110: BNE
+// 0b000111: BLT
+// 0b001000: BGE
+// 0b001001: BLTU
+// 0b001010: BGEU
+// 0b001011: LB
+// 0b001100: LH
+// 0b001101: LW
+// 0b001110: LBU
+// 0b001111: LHU
+// 0b010000: SB
+// 0b010001: SH
+// 0b010010: SW
+// 0b010011: ADDI
+// 0b010100: SLTI
+// 0b010101: SLTIU
+// 0b010110: XORI
+// 0b010111: ORI
+// 0b011000: ANDI
+// 0b011001: SLLI
+// 0b011010: SRLI
+// 0b011011: SRAI
+// 0b011100: ADD
+// 0b011101: SUB
+// 0b011110: SLL
+// 0b011111: SLT
+// 0b100000: SLTU
+// 0b100001: XOR
+// 0b100010: SRL
+// 0b100011: SRA
+// 0b100100: OR
+// 0b100101: AND
+// 0b100110: FENCE
+// 0b100111: ECALL
+// 0b101000: EBREAK
+
 #include "declaration.nsl"
 
 module primitive_cpu {
     // プログラムカウンタ
     reg pc[32] = 0x00000000;
-
-    // 取得命令列
-    reg instr[32] = 0x00000000;
-
-    // レジスタファイルからフェッチ
-    reg ra[32] = 0x00000000;
-    reg rb[32] = 0x00000000;
-    reg rd[32] = 0x00000000;
-
-    // レジスタ名
-    reg rname_a[5] = 0b00000;
-    reg rname_b[5] = 0b00000;
-    reg rname_d[5] = 0b00000;
-
-    // デコードした命令を格納
-    // 0b000000: NOP
-    // 0b000001: LUI
-    // 0b000010: AUIPC
-    // 0b000011: JAL
-    // 0b000100: JALR
-    // 0b000101: BEQ
-    // 0b000110: BNE
-    // 0b000111: BLT
-    // 0b001000: BGE
-    // 0b001001: BLTU
-    // 0b001010: BGEU
-    // 0b001011: LB
-    // 0b001100: LH
-    // 0b001101: LW
-    // 0b001110: LBU
-    // 0b001111: LHU
-    // 0b010000: SB
-    // 0b010001: SH
-    // 0b010010: SW
-    // 0b010011: ADDI
-    // 0b010100: SLTI
-    // 0b010101: SLTIU
-    // 0b010110: XORI
-    // 0b010111: ORI
-    // 0b011000: ANDI
-    // 0b011001: SLLI
-    // 0b011010: SRLI
-    // 0b011011: SRAI
-    // 0b011100: ADD
-    // 0b011101: SUB
-    // 0b011110: SLL
-    // 0b011111: SLT
-    // 0b100000: SLTU
-    // 0b100001: XOR
-    // 0b100010: SRL
-    // 0b100011: SRA
-    // 0b100100: OR
-    // 0b100101: AND
-    // 0b100110: FENCE
-    // 0b100111: ECALL
-    // 0b101000: EBREAK
-    reg inst[6] = 0b000000;
 
     // レジスタファイル
     regfile r32;
@@ -70,145 +56,262 @@ module primitive_cpu {
     alu32 a32;
 
     // シフタ
-    // shifter32 s32;
+    shifter32 s32;
 
     // 5段パイプラインを構成する
     // 命令フェッチ→命令デコード→レジスタフェッチ→実行→書き戻し
+
+    // 命令フェッチステージ
     proc_name fetch();
+
+    // デコードステージ
+    // 取得命令列
+    reg instr[32] = 0x00000000;
     proc_name decode(instr);
-    proc_name register_fetch(rname_a, rname_b);
-    proc_name execute(ra, rb);
-    proc_name writeback(rd, pc);
+
+    // レジスタフェッチステージ
+    reg inst_rf[6];
+    reg rname_a_rf[5];
+    reg rname_b_rf[5];
+    reg rname_d_rf[5];
+    reg imm_rf[20];
+    proc_name register_fetch(inst_rf, rname_a_rf, rname_b_rf, rname_d_rf, imm_rf);
+
+    // 実行ステージ
+    reg inst_ex[6];
+    reg ra[32];
+    reg rb[32];
+    reg rname_d_ex[5];
+    reg imm_ex[20];
+    proc_name execute(inst_ex, ra, rb, rname_d_ex, imm_ex);
+
+    // 書き戻しステージ
+    reg rname_d_wb[5];
+    reg rd[32];
+    proc_name writeback(rname_d_wb, rd, pc);
 
     fetch();
 
     proc fetch {
-        wire instrdata[32];
-        
-        instrdata = read(pc);
-        decode(instrdata);
+        decode(read(pc));
     }
 
     proc decode {
         wire opcode[7];
         wire funct3[3];
-        // wire funct7[7];
-        wire ra_w[5];
-        wire rb_w[5];
+        wire funct7[7];
 
         opcode = instr[6:0];
         funct3 = instr[14:12];
-        // funct7 = instr[31:25];
+        funct7 = instr[31:25];
 
         any {
-            opcode == LUI: {
-                inst := 0b000001;
-                rname_d := instr[11:7];
-                ra_w = 0b00000;
-                rb_w = 0b00000;
-            }
+            opcode == LUI: 
+                register_fetch(0b000001, 0b00000, 0b00000, instr[11:7], instr[31:12]);
 
-            opcode == AUIPC: {
-                inst := 0b000010;
-                rname_d := instr[11:7];
-                ra_w = 0b00000;
-                rb_w = 0b00000;
-            }
+            opcode == AUIPC: 
+                register_fetch(0b000010, 0b00000, 0b00000, instr[11:7], instr[31:12]);
 
-            opcode == JAL: {
-                inst := 0b000011;
-                rname_d := instr[11:7];
-                ra_w = 0b00000;
-                rb_w = 0b00000;
-            }
+            opcode == JAL: 
+                register_fetch(0b000011, 0b00000, 0b00000, instr[11:7], 
+                               {instr[31], instr[19:12], instr[20], instr[30:21]});
 
-            opcode == JALR: {
-                inst := 0b000100;
-                rname_d := instr[11:7];
-                ra_w = instr[19:15];
-                rb_w = 0b00000;
-            }
+            opcode == JALR: 
+                register_fetch(0b000100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
 
-            opcode == CONDBRANCH: {
-                ra_w = instr[19:15];
-                rb_w = instr[24:20];
-
+            opcode == BRANCH: {
                 any {
                     // BEQ
                     funct3 == 0b000:
-                        inst := 0b000101;
+                        register_fetch(0b000101, instr[19:15], instr[24:20], instr[11:7], 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
 
                     // BNE
                     funct3 == 0b001:
-                        inst := 0b000110;
+                        register_fetch(0b000110, instr[19:15], instr[24:20], instr[11:7], 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
 
                     // BLT
                     funct3 == 0b100:
-                        inst := 0b000111;
+                        register_fetch(0b000111, instr[19:15], instr[24:20], instr[11:7], 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
 
                     // BGE
                     funct3 == 0b101:
-                        inst := 0b001000;
+                        register_fetch(0b001000, instr[19:15], instr[24:20], instr[11:7], 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
                     
                     // BLTU
                     funct3 == 0b110:
-                        inst := 0b001001;
+                        register_fetch(0b001001, instr[19:15], instr[24:20], instr[11:7], 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
                     
                     // BGEU
                     funct3 == 0b111:
-                        inst := 0b001010;
+                        register_fetch(0b001010, instr[19:15], instr[24:20], instr[11:7], 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
                 }
             }
 
             opcode == LOAD: {
-
+                any {
+                    // LB
+                    funct3 == 0b000: 
+                        register_fetch(0b001011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                    
+                    // LH
+                    funct3 == 0b001: 
+                        register_fetch(0b001100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                    
+                    // LW
+                    funct3 == 0b010:
+                        register_fetch(0b001101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                    
+                    // LBU
+                    funct3 == 0b100: 
+                        register_fetch(0b001110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                    
+                    // LHU
+                    funct3 == 0b101: 
+                        register_fetch(0b001111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                }
             }
 
             opcode == STORE: {
+                any {
+                    // SB
+                    funct3 == 0b000: 
+                        register_fetch(0b010000, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[21:25], instr[11:7]}));
 
+                    // SH
+                    funct3 == 0b001: 
+                        register_fetch(0b010001, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[21:25], instr[11:7]}));
+
+                    // SW
+                    funct3 == 0b010: 
+                        register_fetch(0b010010, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[21:25], instr[11:7]}));
+                }
             }
 
             opcode == IARITHMETIC: {
+                any {
+                    // ADDI
+                    funct3 == 0b000: 
+                        register_fetch(0b010011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
 
+                    // SLTI
+                    funct3 == 0b010: 
+                        register_fetch(0b010100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+
+                    // SLTIU
+                    funct3 == 0b011: 
+                        register_fetch(0b010101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+
+                    // XORI
+                    funct3 == 0b100: 
+                        register_fetch(0b010110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+
+                    // ORI
+                    funct3 == 0b110: 
+                        register_fetch(0b010111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+
+                    // ANDI
+                    funct3 == 0b111: 
+                        register_fetch(0b011000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+
+                    // SLLI
+                    funct3 == 0b001: 
+                        register_fetch(0b011001, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]));
+
+                    funct3 == 0b001: any {
+                        // SRLI
+                        funct7 == 0b0000000: 
+                            register_fetch(0b011010, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]));
+
+                        // SRAI
+                        funct7 == 0b0100000: 
+                            register_fetch(0b011011, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]));
+                    }
+                }
             }
 
             opcode == ARITHMETIC: {
+                any {
+                    funct3 == 0b000: any {
+                        // ADD
+                        funct7 == 0b0000000:
+                            register_fetch(0b011100, instr[19:15], instr[24:20], instr[11:7], 0);
 
+                        // SUB
+                        funct7 == 0b0100000:
+                            register_fetch(0b011101, instr[19:15], instr[24:20], instr[11:7], 0);
+                    }
+
+                    // SLL
+                    funct3 == 0b001: 
+                        register_fetch(0b011110, instr[19:15], instr[24:20], instr[11:7], 0);
+
+                    // SLT
+                    funct3 == 0b010: 
+                        register_fetch(0b011111, instr[19:15], instr[24:20], instr[11:7], 0);
+
+                    // SLTU
+                    funct3 == 0b011: 
+                        register_fetch(0b100000, instr[19:15], instr[24:20], instr[11:7], 0);
+
+                    // XOR
+                    funct3 == 0b100: 
+                        register_fetch(0b100001, instr[19:15], instr[24:20], instr[11:7], 0);
+
+                    funct3 == 0b101: any {
+                        // SRL
+                        funct7 == 0b0000000: 
+                            register_fetch(0b100010, instr[19:15], instr[24:20], instr[11:7], 0);
+                        
+                        // SRA
+                        funct7 == 0b0100000: 
+                            register_fetch(0b100011, instr[19:15], instr[24:20], instr[11:7], 0);
+                    }
+
+                    // OR
+                    funct3 == 0b110: 
+                        register_fetch(0b100100, instr[19:15], instr[24:20], instr[11:7], 0);
+
+                    // AND
+                    funct3 == 0b111: 
+                        register_fetch(0b100101, instr[19:15], instr[24:20], instr[11:7], 0);
+                }
             }
 
-            opcode == FENCE: {
+            opcode == FENCE: 
+                register_fetch(0b100110, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]));
 
-            }
+            opcode == SYSTEM: any {
+                // ECALL
+                instr[31:20] == 0b000000000000: 
+                    register_fetch(0b100111, 0b00000, 0b00000, 0b00000, 0);
 
-            opcode == ECALL: {
-
-            }
-
-            opcode == EBREAK: {
-
+                // EBREAK
+                instr[31:20] == 0b000000000001: 
+                    register_fetch(0b101000, 0b00000, 0b00000, 0b00000, 0);
             }
         }
-
-        register_fetch(ra_w, rb_w);
     }
 
     proc register_fetch {
-        wire a[32];
-        wire b[32];
-
-        r32.read(rname_a, rname_b);
-        a = r32.rdataA;
-        b = r32.rdataB;
-        execute(a, b);
+        r32.read(rname_a_rf, rname_b_rf);
+        execute(inst_rf, r32.rdataA, r32.rdataB, rname_d_rf, imm_rf);
     }
 
     proc execute {
-        write(0x00000000, 0x00000000);
-        writeback(a32.exec(0b0001, ra, rb), pc + 4);
+        writeback(rname_d_ex, 0x00000000, pc + 4);
     }
 
     proc writeback {
-        r32.write(rname_d, rd);
+        r32.write(rname_d_wb, rd);
         finish();
     }
 }
