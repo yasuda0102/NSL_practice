@@ -36,8 +36,12 @@ module dpram(
     end
 
     initial begin
-        for (i = 0; i < 65535; i++) begin
-            mem[i] = 32'h00000000;
+        for (i = 0; i < 65536 / 4; i += 4) begin
+            // addi zero, zero, 0
+            mem[i] = 8'h13;
+            mem[i + 1] = 8'h00;
+            mem[i + 2] = 8'h00;
+            mem[i + 3] = 8'h00;
         end
     end
 

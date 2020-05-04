@@ -67,7 +67,8 @@ module primitive_cpu {
     // デコードステージ
     // 取得命令列
     reg instr[32] = 0x00000000;
-    proc_name decode(instr);
+    reg pc_de[32];
+    proc_name decode(instr, pc_de);
 
     // レジスタフェッチステージ
     reg inst_rf[6];
@@ -75,7 +76,8 @@ module primitive_cpu {
     reg rname_b_rf[5];
     reg rname_d_rf[5];
     reg imm_rf[20];
-    proc_name register_fetch(inst_rf, rname_a_rf, rname_b_rf, rname_d_rf, imm_rf);
+    reg pc_rf[32];
+    proc_name register_fetch(inst_rf, rname_a_rf, rname_b_rf, rname_d_rf, imm_rf, pc_rf);
 
     // 実行ステージ
     reg inst_ex[6];
@@ -83,12 +85,14 @@ module primitive_cpu {
     reg rb[32];
     reg rname_d_ex[5];
     reg imm_ex[20];
-    proc_name execute(inst_ex, ra, rb, rname_d_ex, imm_ex);
+    reg pc_ex[32];
+    proc_name execute(inst_ex, ra, rb, rname_d_ex, imm_ex, pc_ex);
 
     // 書き戻しステージ
     reg rname_d_wb[5];
     reg rd[32];
-    proc_name writeback(rname_d_wb, rd);
+    reg pc_wb[32];
+    proc_name writeback(rname_d_wb, rd, pc_wb);
 
     // パイプラインをフラッシュする関数
     func_self flush();
@@ -96,7 +100,8 @@ module primitive_cpu {
     fetch();
 
     proc fetch {
-        decode(read(pc));
+        decode(read(pc), pc);
+        pc := pc + 4;
     }
 
     proc decode {
@@ -110,49 +115,49 @@ module primitive_cpu {
 
         any {
             opcode == LUI: 
-                register_fetch(0b000001, 0b00000, 0b00000, instr[11:7], instr[31:12]);
+                register_fetch(0b000001, 0b00000, 0b00000, instr[11:7], instr[31:12], pc_de);
 
             opcode == AUIPC: 
-                register_fetch(0b000010, 0b00000, 0b00000, instr[11:7], instr[31:12]);
+                register_fetch(0b000010, 0b00000, 0b00000, instr[11:7], instr[31:12], pc_de);
 
             opcode == JAL: 
                 register_fetch(0b000011, 0b00000, 0b00000, instr[11:7], 
-                               {instr[31], instr[19:12], instr[20], instr[30:21]});
+                               {instr[31], instr[19:12], instr[20], instr[30:21]}, pc_de);
 
             opcode == JALR: 
-                register_fetch(0b000100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                register_fetch(0b000100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
             opcode == BRANCH: {
                 any {
                     // BEQ
                     funct3 == 0b000:
-                        register_fetch(0b000101, instr[19:15], instr[24:20], instr[11:7], 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                        register_fetch(0b000101, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
 
                     // BNE
                     funct3 == 0b001:
-                        register_fetch(0b000110, instr[19:15], instr[24:20], instr[11:7], 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                        register_fetch(0b000110, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
 
                     // BLT
                     funct3 == 0b100:
-                        register_fetch(0b000111, instr[19:15], instr[24:20], instr[11:7], 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                        register_fetch(0b000111, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
 
                     // BGE
                     funct3 == 0b101:
-                        register_fetch(0b001000, instr[19:15], instr[24:20], instr[11:7], 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                        register_fetch(0b001000, instr[19:15], instr[24:20], 0b00000, 
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
                     
                     // BLTU
                     funct3 == 0b110:
-                        register_fetch(0b001001, instr[19:15], instr[24:20], instr[11:7], 
-                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                        register_fetch(0b001001, instr[19:15], instr[24:20], 0b00000, 
+                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
                     
                     // BGEU
                     funct3 == 0b111:
-                        register_fetch(0b001010, instr[19:15], instr[24:20], instr[11:7], 
-                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                        register_fetch(0b001010, instr[19:15], instr[24:20], 0b00000, 
+                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
                 }
             }
 
@@ -160,23 +165,23 @@ module primitive_cpu {
                 any {
                     // LB
                     funct3 == 0b000: 
-                        register_fetch(0b001011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b001011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LH
                     funct3 == 0b001: 
-                        register_fetch(0b001100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b001100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LW
                     funct3 == 0b010:
-                        register_fetch(0b001101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b001101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LBU
                     funct3 == 0b100: 
-                        register_fetch(0b001110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b001110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LHU
                     funct3 == 0b101: 
-                        register_fetch(0b001111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b001111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                 }
             }
 
@@ -185,17 +190,17 @@ module primitive_cpu {
                     // SB
                     funct3 == 0b000: 
                         register_fetch(0b010000, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[21:25], instr[11:7]}));
+                                       20#({instr[21:25], instr[11:7]}), pc_de);
 
                     // SH
                     funct3 == 0b001: 
                         register_fetch(0b010001, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[21:25], instr[11:7]}));
+                                       20#({instr[21:25], instr[11:7]}), pc_de);
 
                     // SW
                     funct3 == 0b010: 
                         register_fetch(0b010010, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[21:25], instr[11:7]}));
+                                       20#({instr[21:25], instr[11:7]}), pc_de);
                 }
             }
 
@@ -203,40 +208,40 @@ module primitive_cpu {
                 any {
                     // ADDI
                     funct3 == 0b000: 
-                        register_fetch(0b010011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b010011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // SLTI
                     funct3 == 0b010: 
-                        register_fetch(0b010100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b010100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // SLTIU
                     funct3 == 0b011: 
-                        register_fetch(0b010101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b010101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // XORI
                     funct3 == 0b100: 
-                        register_fetch(0b010110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b010110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // ORI
                     funct3 == 0b110: 
-                        register_fetch(0b010111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b010111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // ANDI
                     funct3 == 0b111: 
-                        register_fetch(0b011000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]));
+                        register_fetch(0b011000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // SLLI
                     funct3 == 0b001: 
-                        register_fetch(0b011001, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]));
+                        register_fetch(0b011001, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
 
                     funct3 == 0b001: any {
                         // SRLI
                         funct7 == 0b0000000: 
-                            register_fetch(0b011010, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]));
+                            register_fetch(0b011010, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
 
                         // SRAI
                         funct7 == 0b0100000: 
-                            register_fetch(0b011011, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]));
+                            register_fetch(0b011011, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
                     }
                 }
             }
@@ -246,188 +251,330 @@ module primitive_cpu {
                     funct3 == 0b000: any {
                         // ADD
                         funct7 == 0b0000000:
-                            register_fetch(0b011100, instr[19:15], instr[24:20], instr[11:7], 0);
+                            register_fetch(0b011100, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                         // SUB
                         funct7 == 0b0100000:
-                            register_fetch(0b011101, instr[19:15], instr[24:20], instr[11:7], 0);
+                            register_fetch(0b011101, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                     }
 
                     // SLL
                     funct3 == 0b001: 
-                        register_fetch(0b011110, instr[19:15], instr[24:20], instr[11:7], 0);
+                        register_fetch(0b011110, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // SLT
                     funct3 == 0b010: 
-                        register_fetch(0b011111, instr[19:15], instr[24:20], instr[11:7], 0);
+                        register_fetch(0b011111, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // SLTU
                     funct3 == 0b011: 
-                        register_fetch(0b100000, instr[19:15], instr[24:20], instr[11:7], 0);
+                        register_fetch(0b100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // XOR
                     funct3 == 0b100: 
-                        register_fetch(0b100001, instr[19:15], instr[24:20], instr[11:7], 0);
+                        register_fetch(0b100001, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     funct3 == 0b101: any {
                         // SRL
                         funct7 == 0b0000000: 
-                            register_fetch(0b100010, instr[19:15], instr[24:20], instr[11:7], 0);
+                            register_fetch(0b100010, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                         
                         // SRA
                         funct7 == 0b0100000: 
-                            register_fetch(0b100011, instr[19:15], instr[24:20], instr[11:7], 0);
+                            register_fetch(0b100011, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                     }
 
                     // OR
                     funct3 == 0b110: 
-                        register_fetch(0b100100, instr[19:15], instr[24:20], instr[11:7], 0);
+                        register_fetch(0b100100, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // AND
                     funct3 == 0b111: 
-                        register_fetch(0b100101, instr[19:15], instr[24:20], instr[11:7], 0);
+                        register_fetch(0b100101, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                 }
             }
 
             opcode == FENCE: 
-                register_fetch(0b100110, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]));
+                register_fetch(0b100110, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]), pc_de);
 
             opcode == SYSTEM: any {
                 // ECALL
                 instr[31:20] == 0b000000000000: 
-                    register_fetch(0b100111, 0b00000, 0b00000, 0b00000, 0);
+                    register_fetch(0b100111, 0b00000, 0b00000, 0b00000, 0, pc_de);
 
                 // EBREAK
                 instr[31:20] == 0b000000000001: 
-                    register_fetch(0b101000, 0b00000, 0b00000, 0b00000, 0);
+                    register_fetch(0b101000, 0b00000, 0b00000, 0b00000, 0, pc_de);
             }
         }
     }
 
     proc register_fetch {
         r32.read(rname_a_rf, rname_b_rf);
-        execute(inst_rf, r32.rdataA, r32.rdataB, rname_d_rf, imm_rf);
+        execute(inst_rf, r32.rdataA, r32.rdataB, rname_d_rf, imm_rf, pc_rf);
     }
 
     proc execute {
         wire rd_w[32];
         wire rdata_w[32];
+        wire pc_ex_w[32];
 
         any {
             // LUI
             inst_ex == 0b000001: {
                 rd_w = {imm_ex, 0b000000000000};
-                pc := pc + 4;
+                pc_ex_w = pc_ex + 4;
             }
 
             // AUIPC
             inst_ex == 0b000010: {
                 rd_w = {imm_ex, 0b000000000000};
-                pc := pc + rd_w;
-                flush();
+                pc_ex_w = pc_ex + rd_w;
             }
 
             // JAL
             inst_ex == 0b000011: {
-                rd_w = pc + 32#({imm_ex, 0b0});
-                pc := pc + 32#({imm_ex, 0b0});
-                flush();
+                rd_w = pc_ex + 32#({imm_ex, 0b0});
+                pc_ex_w = pc_ex + 32#({imm_ex, 0b0});
             }
 
             // JALR
             inst_ex == 0b000100: {
-                rd_w = pc + ra + 32#(imm_ex);
-                pc := pc + ra + 32#(imm_ex);
-                flush();
+                rd_w = pc_ex + ra + 32#(imm_ex);
+                pc_ex_w = pc_ex + ra + 32#(imm_ex);
             }
 
             // BEQ
             inst_ex == 0b000101: {
                 rd_w = 0x00000000;
-                if (ra == rb) {
-                    pc := pc + imm_ex;
-                    flush();
-                }
-                else pc := pc + 4;
+                if (ra == rb) pc_ex_w = pc_ex + imm_ex;
+                else pc_ex_w = pc_ex + 4;
             }
 
             // BNE
             inst_ex == 0b000110: {
                 rd_w = 0x00000000;
-                if (ra != rb) {
-                    pc := pc + imm_ex;
-                    flush();
-                }
-                else pc := pc + 4;
+                if (ra != rb) pc_ex_w = pc_ex + imm_ex;
+                else pc_ex_w = pc_ex + 4;
             }
 
             // BLT
             inst_ex == 0b000111: {
                 rd_w = 0x00000000;
-                if (ra < rb) {
-                    pc := pc + imm_ex;
-                    flush();
-                }
-                else pc := pc + 4;
+                if (ra < rb) pc_ex_w = pc_ex + imm_ex;
+                else pc_ex_w = pc_ex + 4;
             }
 
             // BGE
             inst_ex == 0b001000: {
                 rd_w = 0x00000000;
-                if (ra >= rb) {
-                    pc := pc + imm_ex;
-                    flush();
-                }
-                else pc := pc + 4;
+                if (ra >= rb) pc_ex_w = pc_ex + imm_ex;
+                else pc_ex_w = pc_ex + 4;
             }
 
             // BLTU
             inst_ex == 0b001001: {
                 rd_w = 0x00000000;
-                if (ra < rb) {
-                    pc := pc + imm_ex;
-                    flush();
-                }
-                else pc := pc + 4;
+                if (ra < rb) pc_ex_w = pc_ex + imm_ex;
+                else pc_ex_w = pc_ex + 4;
             }
 
             // BGEU
             inst_ex == 0b001010: {
                 rd_w = 0x00000000;
-                if (ra >= rb) {
-                    pc := pc + imm_ex;
-                    flush();
-                }
-                else pc := pc + 4;
+                if (ra >= rb) pc_ex_w = pc_ex + imm_ex;
+                else pc_ex_w = pc_ex + 4;
             }
 
             // LB
             inst_ex == 0b001011: {
                 rdata_w = read(ra + 32#(imm_ex));
-                rd_w = 32'(rdata_w[7:0]);
-                pc := pc + 4;
+                rd_w = 32#(rdata_w[7:0]);
+                pc_ex_w = pc_ex + 4;
             }
 
             // LH
             inst_ex == 0b001100: {
                 rdata_w = read(ra + 32#(imm_ex));
-                rd_w = 32'(rdata_w[15:0]);
-                pc := pc + 4;
+                rd_w = 32#(rdata_w[15:0]);
+                pc_ex_w = pc_ex + 4;
             }
 
             // LW
             inst_ex == 0b001101: {
                 rdata_w = read(ra + 32#(imm_ex));
                 rd_w = rdata_w;
-                pc := pc + 4;
+                pc_ex_w = pc_ex + 4;
             }
+
+            // LBU
+            inst_ex == 0b001011: {
+                rdata_w = read(ra + 32#(imm_ex));
+                rd_w = 32'(rdata_w[7:0]);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // LHU
+            inst_ex == 0b001100: {
+                rdata_w = read(ra + 32#(imm_ex));
+                rd_w = 32'(rdata_w[15:0]);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SB
+            inst_ex == 0b010000: {
+                rdata_w = read(ra + 32#(imm_ex));
+                write(ra + 32#(imm_ex), {rdata_w[31:8], rb[7:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SH
+            inst_ex == 0b010001: {
+                rdata_w = read(ra + 32#(imm_ex));
+                write(ra + 32#(imm_ex), {rdata_w[31:16], rb[15:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SW
+            inst_ex == 0b010010: {
+                write(ra + 32#(imm_ex), rb);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // ADDI
+            inst_ex == 0b010011: {
+                rd_w = a32.exec(0b0001, ra, 32#(imm_ex));
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SLTI
+            inst_ex == 0b010100: {
+                if (ra < 32#(imm_ex)) rd_w = 0x00000001;
+                else rd_w = 0x00000000;
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SLTIU
+            inst_ex == 0b010101: {
+                if (ra < 32'(imm_ex)) rd_w = 0x00000001;
+                else rd_w = 0x00000000;
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // XORI
+            inst_ex == 0b010110: {
+                rd_w = a32.exec(0b0101, ra, 32#(imm_ex));
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // ORI
+            inst_ex == 0b010111: {
+                rd_w = a32.exec(0b0100, ra, 32#(imm_ex));
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // ANDI
+            inst_ex == 0b011000: {
+                rd_w = a32.exec(0b0011, ra, 32#(imm_ex));
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SLLI
+            inst_ex == 0b011001: {
+                rd_w = s32.shiftLeftL(ra, {0b0, imm_ex[4:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SRLI
+            inst_ex == 0b011010: {
+                rd_w = s32.shiftRightL(ra, {0b0, imm_ex[4:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SRAI
+            inst_ex == 0b011011: {
+                rd_w = s32.shiftRightA(ra, {0b0, imm_ex[4:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // ADD
+            inst_ex == 0b011100: {
+                rd_w = a32.exec(0b0001, ra, rb);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SUB
+            inst_ex == 0b011101: {
+                rd_w = a32.exec(0b0010, ra, rb);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SLL
+            inst_ex == 0b011110: {
+                rd_w = s32.shiftLeftL(ra, {0b0, rb[4:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SLT
+            inst_ex == 0b011111: {
+                if (ra < rb) rd_w = 0x00000001;
+                else rd_w = 0x00000000;
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SLTU
+            inst_ex == 0b100000: {
+                if (33'(ra) < 33'(rb)) rd_w = 0x00000001;
+                else rd_w = 0x00000000;
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // XOR
+            inst_ex == 0b100001: {
+                rd_w = a32.exec(0b0101, ra, rb);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SRL
+            inst_ex == 0b100010: {
+                rd_w = s32.shiftRightL(ra, {0b0, rb[4:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // SRA
+            inst_ex == 0b100011: {
+                rd_w = s32.shiftRightA(ra, {0b0, rb[4:0]});
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // OR
+            inst_ex == 0b100100: {
+                rd_w = a32.exec(0b0100, ra, rb);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // AND
+            inst_ex == 0b100101: {
+                rd_w = a32.exec(0b0011, ra, rb);
+                pc_ex_w = pc_ex + 4;
+            }
+
+            // FENCE
+            inst_ex == 0b100110: pc_ex_w = pc_ex + 4;
+
+            // ECALL
+            inst_ex == 0b100111: pc_ex_w = pc_ex + 4;
+
+            // EBREAK
+            inst_ex == 0b101000: pc_ex_w = pc_ex + 4;
         }
 
-        writeback(rname_d_ex, rd_w);
+        writeback(rname_d_ex, rd_w, pc_ex_w);
     }
 
     proc writeback {
         r32.write(rname_d_wb, rd);
+        if (pc_wb != pc_ex + 4) flush();
         finish();
     }
 
