@@ -88,7 +88,10 @@ module primitive_cpu {
     // 書き戻しステージ
     reg rname_d_wb[5];
     reg rd[32];
-    proc_name writeback(rname_d_wb, rd, pc);
+    proc_name writeback(rname_d_wb, rd);
+
+    // パイプラインをフラッシュする関数
+    func_self flush();
 
     fetch();
 
@@ -144,12 +147,12 @@ module primitive_cpu {
                     // BLTU
                     funct3 == 0b110:
                         register_fetch(0b001001, instr[19:15], instr[24:20], instr[11:7], 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
                     
                     // BGEU
                     funct3 == 0b111:
                         register_fetch(0b001010, instr[19:15], instr[24:20], instr[11:7], 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
+                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}));
                 }
             }
 
@@ -307,11 +310,127 @@ module primitive_cpu {
     }
 
     proc execute {
-        writeback(rname_d_ex, 0x00000000, pc + 4);
+        wire rd_w[32];
+        wire rdata_w[32];
+
+        any {
+            // LUI
+            inst_ex == 0b000001: {
+                rd_w = {imm_ex, 0b000000000000};
+                pc := pc + 4;
+            }
+
+            // AUIPC
+            inst_ex == 0b000010: {
+                rd_w = {imm_ex, 0b000000000000};
+                pc := pc + rd_w;
+                flush();
+            }
+
+            // JAL
+            inst_ex == 0b000011: {
+                rd_w = pc + 32#({imm_ex, 0b0});
+                pc := pc + 32#({imm_ex, 0b0});
+                flush();
+            }
+
+            // JALR
+            inst_ex == 0b000100: {
+                rd_w = pc + ra + 32#(imm_ex);
+                pc := pc + ra + 32#(imm_ex);
+                flush();
+            }
+
+            // BEQ
+            inst_ex == 0b000101: {
+                rd_w = 0x00000000;
+                if (ra == rb) pc := pc + imm_ex;
+                else pc := pc + 4;
+            }
+
+            // BNE
+            inst_ex == 0b000110: {
+                rd_w = 0x00000000;
+                if (ra != rb) {
+                    pc := pc + imm_ex;
+                    flush();
+                }
+                else pc := pc + 4;
+            }
+
+            // BLT
+            inst_ex == 0b000111: {
+                rd_w = 0x00000000;
+                if (ra < rb) {
+                    pc := pc + imm_ex;
+                    flush();
+                }
+                else pc := pc + 4;
+            }
+
+            // BGE
+            inst_ex == 0b001000: {
+                rd_w = 0x00000000;
+                if (ra >= rb) {
+                    pc := pc + imm_ex;
+                }
+                else pc := pc + 4;
+            }
+
+            // BLTU
+            inst_ex == 0b001001: {
+                rd_w = 0x00000000;
+                if (ra < rb) {
+                    pc := pc + imm_ex;
+                    flush();
+                }
+                else pc := pc + 4;
+            }
+
+            // BGEU
+            inst_ex == 0b001010: {
+                rd_w = 0x00000000;
+                if (ra >= rb) {
+                    pc := pc + imm_ex;
+                }
+                else pc := pc + 4;
+            }
+
+            // LB
+            inst_ex == 0b001011: {
+                rdata_w = read(ra + 32#(imm_ex));
+                rd_w = 32'(rdata_w[7:0]);
+                pc := pc + 4;
+            }
+
+            // LH
+            inst_ex == 0b001100: {
+                rdata_w = read(ra + 32#(imm_ex));
+                rd_w = 32'(rdata_w[15:0]);
+                pc := pc + 4;
+            }
+
+            // LW
+            inst_ex == 0b001101: {
+                rdata_w = read(ra + 32#(imm_ex));
+                rd_w = rdata_w;
+                pc := pc + 4;
+            }
+        }
+
+        writeback(rname_d_ex, rd_w);
     }
 
     proc writeback {
         r32.write(rname_d_wb, rd);
         finish();
+    }
+
+    func flush {
+        fetch.finish();
+        decode.finish();
+        register_fetch.finish();
+        execute.finish();
+        writeback.finish();
     }
 }
