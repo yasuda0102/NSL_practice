@@ -344,7 +344,10 @@ module primitive_cpu {
             // BEQ
             inst_ex == 0b000101: {
                 rd_w = 0x00000000;
-                if (ra == rb) pc := pc + imm_ex;
+                if (ra == rb) {
+                    pc := pc + imm_ex;
+                    flush();
+                }
                 else pc := pc + 4;
             }
 
@@ -373,6 +376,7 @@ module primitive_cpu {
                 rd_w = 0x00000000;
                 if (ra >= rb) {
                     pc := pc + imm_ex;
+                    flush();
                 }
                 else pc := pc + 4;
             }
@@ -392,6 +396,7 @@ module primitive_cpu {
                 rd_w = 0x00000000;
                 if (ra >= rb) {
                     pc := pc + imm_ex;
+                    flush();
                 }
                 else pc := pc + 4;
             }
