@@ -73,6 +73,6 @@ module alu32 {
     }
 
     func invert {
-        return ~inv; 
+        return inv ^ 0xffffffff; 
     }
 }
