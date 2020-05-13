@@ -7,23 +7,26 @@ declare driver simulation {
 }
 
 module driver {
-    primitive_cpu cpu;
-    dpram m64K;
-    reg count[8] = 0;
+    comparator32 c32;
+    reg counter[7] = 0;
 
-    count++;
-    if (count == 100) _finish("Simulation End");
+    func_self test();
 
-    func cpu.write {
-        m64K.addr1 = cpu.addr1;
-        m64K.wdata1 = cpu.wdata;
-        m64K.we1 = 0b1;
-    }
+    counter++;
+    if (counter == 0b0000000) test();
+    if (counter == 100) _finish("Simulation End.");
 
-    func cpu.read {
-        m64K.addr2 = cpu.addr2;
-        m64K.wdata2 = 0x00000000;
-        m64K.we2 = 0b0;
-        return m64K.rdata2;
+    func test seq {
+        // Signed Comparation
+        _display("0 < 1: %b", c32.exec(0b0011, 0x00000000, 0x00000001));
+        _display("0 < 0: %b", c32.exec(0b0011, 0x00000000, 0x00000000));
+        _display("-32 < 10: %b", c32.exec(0b0011, 0xffffffe0, 0x0000000a));
+        _display("0 >= 1: %b", c32.exec(0b0100, 0x00000000, 0x00000001));
+        _display("0 >= 0: %b", c32.exec(0b0100, 0x00000000, 0x00000000));
+        _display("-32 >= 10: %b", c32.exec(0b0100, 0xffffffe0, 0x0000000a));
+
+        // Unsigned Comparation
+        _display("4294967264 < 10: %b", c32.exec(0b1011, 0xffffffe0, 0x0000000a));
+        _display("4294967264 >= 10: %b", c32.exec(0b1100, 0xffffffe0, 0x0000000a));
     }
 }

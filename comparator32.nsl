@@ -40,6 +40,9 @@ module comparator32 {
                 if (tmp[31]) result = 0b0;
                 else result = 0b1;
             }
+
+            // A >= B (A, Bは符号なし整数)
+            opcode == 0b1100: result = (opA >= opB);
         }
     }
 }
