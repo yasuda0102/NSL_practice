@@ -51,6 +51,24 @@ declare alu32 {
     func_in exec(opcode, opA, opB) : result;
 }
 
+declare comparator32 {
+    input opcode[4];    // 0b0000: No Operation
+                        // 0b0001: A == B
+                        // 0b0010: A != B
+                        // 0b0011: A < B (A, Bは符号付き整数)
+                        // 0b1011: A < B (A, Bは符号なし整数)
+                        // 0b0100: A >= B (A, Bは符号付き整数)
+                        // 0b1100: A >= B (A, Bは符号なし整数)
+    input opA[32];      // オペランドA
+    input opB[32];      // オペランドB
+    output result;      // 比較結果
+                        // 0b0: False
+                        // 0b1: True
+
+    // 命令を実行する関数
+    func_in exec(opcode, opA, opB) : result;
+}
+
 declare regfile {
     input raddrA[5];    // readするレジスタ番号A
     input raddrB[5];    // readするレジスタ番号B

@@ -14,7 +14,7 @@ module dpram(
     input we1;
     input we2;
 
-    reg [7:0] mem [65535:0];
+    reg [7:0] mem [4095:0];
     integer i;
 
     always @(posedge m_clock) begin
@@ -36,7 +36,7 @@ module dpram(
     end
 
     initial begin
-        for (i = 0; i < 65536 / 4; i += 4) begin
+        for (i = 0; i < 4096 / 4; i += 4) begin
             // addi zero, zero, 0
             mem[i] = 8'h13;
             mem[i + 1] = 8'h00;

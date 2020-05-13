@@ -1,0 +1,45 @@
+// 32bit Comparator
+
+#include "declaration.nsl"
+
+module comparator32 {
+    wire comp[32];
+    wire tmp[32];
+
+    func exec {
+        any {
+            // NOP
+            opcode == 0b0000: result = 0;
+
+            // A == B
+            opcode == 0b0001: result = (opA == opB);
+
+            // A != B
+            opcode == 0b0010: result = (opA != opB);
+
+            // A < B (A, Bは符号付き整数)
+            opcode == 0b0011: {
+                // 2の補数を作る
+                comp = (opA ^ 0xffffffff) + 0b1;
+                tmp = opB + comp;
+
+                if (tmp[31]) result = 0b0;
+                else if (opA == opB) result = 0b0;
+                else if (~tmp[31]) result = 0b1;
+            }
+
+            // A < B (A, Bは符号なし整数)
+            opcode == 0b1011: result = (opA < opB);
+
+            // A >= B (A, Bは符号付き整数)
+            opcode == 0b0100: {
+                // 2の補数を作る
+                comp = (opB ^ 0xffffffff) + 0b1;
+                tmp = opA + comp;
+
+                if (tmp[31]) result = 0b0;
+                else result = 0b1;
+            }
+        }
+    }
+}
