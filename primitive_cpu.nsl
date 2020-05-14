@@ -10,7 +10,7 @@ module primitive_cpu {
     regfile r32;
 
     // ALU
-    alu32 a32;
+    alu32 a32, a_jal, a_jalr, a_auipc;
 
     // シフタ
     shifter32 s32;
@@ -362,6 +362,43 @@ module primitive_cpu {
     }
 
     func jump {
-        return 0;
+        wire JAL_result[32];
+        wire JALR_result[32];
+        wire AUIPC_result[32];
+        wire branch_check;
+        wire sel_addr;
+        wire sel_B;
+        wire final_result[32];
+
+        // JALの飛び先計算
+        JAL_result = a_jal.exec(0b0001, pc_i, 32#imm_i);
+
+        // JALRの飛び先計算
+        JALR_result = a_jalr.exec(0b0001, a_i, 32#imm_i);
+
+        // AUIPCの飛び先計算
+        AUIPC_result = a_auipc.exec(0b0001, pc_i, (32#imm_i) << 12);
+
+        any {
+            inst_ex.J | inst_ex.B: {
+                if (sel_B) final_result = JAL_result;
+                else final_result = pc_i;
+            }
+            inst_ex.I: {
+                if (sel_B) final_result = JALR_result;
+                else final_result = pc_i;
+            }
+            inst_ex.U: {
+                if (sel_B) final_result = AUIPC_result;
+                else final_result = pc_i;
+            }
+        }
+
+        // 分岐命令の成立・不成立チェック
+        branch_check = c32_1.exec(inst_ex.OP, a_i, b_i);
+
+        sel_B = if (inst_ex.B) branch_check else 0b1;
+
+        return {sel_B, final_result, final_result};
     }
 }
