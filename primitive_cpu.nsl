@@ -71,7 +71,7 @@ module primitive_cpu {
     proc_name decode(instr, pc_de);
 
     // レジスタフェッチステージ
-    reg inst_rf[6];
+    inst reg inst_rf;
     reg rname_a_rf[5];
     reg rname_b_rf[5];
     reg rname_d_rf[5];
@@ -80,7 +80,7 @@ module primitive_cpu {
     proc_name register_fetch(inst_rf, rname_a_rf, rname_b_rf, rname_d_rf, imm_rf, pc_rf);
 
     // 実行ステージ
-    reg inst_ex[6];
+    inst reg inst_ex;
     reg ra[32];
     reg rb[32];
     reg rname_d_ex[5];
@@ -115,48 +115,48 @@ module primitive_cpu {
 
         any {
             opcode == LUI: 
-                register_fetch(0b000001, 0b00000, 0b00000, instr[11:7], instr[31:12], pc_de);
+                register_fetch(0b100000000000010, 0b00000, 0b00000, instr[11:7], instr[31:12], pc_de);
 
             opcode == AUIPC: 
-                register_fetch(0b000010, 0b00000, 0b00000, instr[11:7], instr[31:12], pc_de);
+                register_fetch(0b000010000000010, 0b00000, 0b00000, instr[11:7], instr[31:12], pc_de);
 
             opcode == JAL: 
-                register_fetch(0b000011, 0b00000, 0b00000, instr[11:7], 
+                register_fetch(0b000010000000001, 0b00000, 0b00000, instr[11:7], 
                                {instr[31], instr[19:12], instr[20], instr[30:21]}, pc_de);
 
             opcode == JALR: 
-                register_fetch(0b000100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                register_fetch(0b000010000010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
             opcode == BRANCH: {
                 any {
                     // BEQ
                     funct3 == 0b000:
-                        register_fetch(0b000101, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000010001000100, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
 
                     // BNE
                     funct3 == 0b001:
-                        register_fetch(0b000110, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000010010000100, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
 
                     // BLT
                     funct3 == 0b100:
-                        register_fetch(0b000111, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000010011000100, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
 
                     // BGE
                     funct3 == 0b101:
-                        register_fetch(0b001000, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000010100000100, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
                     
                     // BLTU
                     funct3 == 0b110:
-                        register_fetch(0b001001, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000011011000100, instr[19:15], instr[24:20], 0b00000, 
                                        20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
                     
                     // BGEU
                     funct3 == 0b111:
-                        register_fetch(0b001010, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000011100000100, instr[19:15], instr[24:20], 0b00000, 
                                        20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
                 }
             }
@@ -165,23 +165,23 @@ module primitive_cpu {
                 any {
                     // LB
                     funct3 == 0b000: 
-                        register_fetch(0b001011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b000100001010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LH
                     funct3 == 0b001: 
-                        register_fetch(0b001100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b000100010010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LW
                     funct3 == 0b010:
-                        register_fetch(0b001101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b000100100010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
                     
                     // LBU
                     funct3 == 0b100: 
-                        register_fetch(0b001110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b000101001010000, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]), pc_de);
                     
                     // LHU
                     funct3 == 0b101: 
-                        register_fetch(0b001111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b000101010010000, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]), pc_de);
                 }
             }
 
@@ -189,17 +189,17 @@ module primitive_cpu {
                 any {
                     // SB
                     funct3 == 0b000: 
-                        register_fetch(0b010000, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000100001001000, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[21:25], instr[11:7]}), pc_de);
 
                     // SH
                     funct3 == 0b001: 
-                        register_fetch(0b010001, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000100010001000, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[21:25], instr[11:7]}), pc_de);
 
                     // SW
                     funct3 == 0b010: 
-                        register_fetch(0b010010, instr[19:15], instr[24:20], 0b00000, 
+                        register_fetch(0b000100100001000, instr[19:15], instr[24:20], 0b00000, 
                                        20#({instr[21:25], instr[11:7]}), pc_de);
                 }
             }
@@ -208,40 +208,40 @@ module primitive_cpu {
                 any {
                     // ADDI
                     funct3 == 0b000: 
-                        register_fetch(0b010011, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b10000_0001_010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // SLTI
                     funct3 == 0b010: 
-                        register_fetch(0b010100, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b00100_0011_010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // SLTIU
                     funct3 == 0b011: 
-                        register_fetch(0b010101, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b00100_1011_010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // XORI
                     funct3 == 0b100: 
-                        register_fetch(0b010110, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b10000_0101_010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // ORI
                     funct3 == 0b110: 
-                        register_fetch(0b010111, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b10000_0100_010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // ANDI
                     funct3 == 0b111: 
-                        register_fetch(0b011000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
+                        register_fetch(0b10000_0011_010000, instr[19:15], 0b00000, instr[11:7], 20#(instr[31:20]), pc_de);
 
                     // SLLI
                     funct3 == 0b001: 
-                        register_fetch(0b011001, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
+                        register_fetch(0b01000_0001_010000, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
 
                     funct3 == 0b001: any {
                         // SRLI
                         funct7 == 0b0000000: 
-                            register_fetch(0b011010, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
+                            register_fetch(0b01000_0010_010000, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
 
                         // SRAI
                         funct7 == 0b0100000: 
-                            register_fetch(0b011011, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
+                            register_fetch(0b01000_1010_010000, instr[19:15], 0b00000, instr[11:7], 20'(instr[24:20]), pc_de);
                     }
                 }
             }
@@ -251,60 +251,60 @@ module primitive_cpu {
                     funct3 == 0b000: any {
                         // ADD
                         funct7 == 0b0000000:
-                            register_fetch(0b011100, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                            register_fetch(0b10000_0001_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                         // SUB
                         funct7 == 0b0100000:
-                            register_fetch(0b011101, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                            register_fetch(0b10000_0010_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                     }
 
                     // SLL
                     funct3 == 0b001: 
-                        register_fetch(0b011110, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                        register_fetch(0b01000_0001_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // SLT
                     funct3 == 0b010: 
-                        register_fetch(0b011111, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                        register_fetch(0b00100_0011_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // SLTU
                     funct3 == 0b011: 
-                        register_fetch(0b100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                        register_fetch(0b00100_1011_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // XOR
                     funct3 == 0b100: 
-                        register_fetch(0b100001, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                        register_fetch(0b10000_0101_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     funct3 == 0b101: any {
                         // SRL
                         funct7 == 0b0000000: 
-                            register_fetch(0b100010, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                            register_fetch(0b01000_0010_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                         
                         // SRA
                         funct7 == 0b0100000: 
-                            register_fetch(0b100011, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                            register_fetch(0b01000_1010_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                     }
 
                     // OR
                     funct3 == 0b110: 
-                        register_fetch(0b100100, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                        register_fetch(0b10000_0100_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
 
                     // AND
                     funct3 == 0b111: 
-                        register_fetch(0b100101, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
+                        register_fetch(0b10000_0011_100000, instr[19:15], instr[24:20], instr[11:7], 0, pc_de);
                 }
             }
 
             opcode == FENCE: 
-                register_fetch(0b100110, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]), pc_de);
+                register_fetch(0b00000_0000_000000, instr[19:15], 0b00000, instr[11:7], 20'(instr[31:20]), pc_de);
 
             opcode == SYSTEM: any {
                 // ECALL
                 instr[31:20] == 0b000000000000: 
-                    register_fetch(0b100111, 0b00000, 0b00000, 0b00000, 0, pc_de);
+                    register_fetch(0b00000_0000_000000, 0b00000, 0b00000, 0b00000, 0, pc_de);
 
                 // EBREAK
                 instr[31:20] == 0b000000000001: 
-                    register_fetch(0b101000, 0b00000, 0b00000, 0b00000, 0, pc_de);
+                    register_fetch(0b00000_0000_000000, 0b00000, 0b00000, 0b00000, 0, pc_de);
             }
         }
     }
