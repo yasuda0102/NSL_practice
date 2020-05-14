@@ -1,48 +1,5 @@
 // Primitive 32bit CPU
 
-// デコードした命令を格納 (inst_*)
-// 0b000000: NOP
-// 0b000001: LUI
-// 0b000010: AUIPC
-// 0b000011: JAL
-// 0b000100: JALR
-// 0b000101: BEQ
-// 0b000110: BNE
-// 0b000111: BLT
-// 0b001000: BGE
-// 0b001001: BLTU
-// 0b001010: BGEU
-// 0b001011: LB
-// 0b001100: LH
-// 0b001101: LW
-// 0b001110: LBU
-// 0b001111: LHU
-// 0b010000: SB
-// 0b010001: SH
-// 0b010010: SW
-// 0b010011: ADDI
-// 0b010100: SLTI
-// 0b010101: SLTIU
-// 0b010110: XORI
-// 0b010111: ORI
-// 0b011000: ANDI
-// 0b011001: SLLI
-// 0b011010: SRLI
-// 0b011011: SRAI
-// 0b011100: ADD
-// 0b011101: SUB
-// 0b011110: SLL
-// 0b011111: SLT
-// 0b100000: SLTU
-// 0b100001: XOR
-// 0b100010: SRL
-// 0b100011: SRA
-// 0b100100: OR
-// 0b100101: AND
-// 0b100110: FENCE
-// 0b100111: ECALL
-// 0b101000: EBREAK
-
 #include "declaration.nsl"
 
 module primitive_cpu {
@@ -94,8 +51,20 @@ module primitive_cpu {
     reg pc_wb[32];
     proc_name writeback(rname_d_wb, rd, pc_wb);
 
-    // パイプラインをフラッシュする関数
-    func_self flush();
+    // 実行ステージにおけるユニット群
+    wire pc_i[32];
+    wire a_i[32];
+    wire b_i[32];
+    wire imm_i[20];
+    wire ret[65];                                       // retの意味付け
+                                                        // ret[64]:    分岐・ジャンプフラグ
+                                                        // ret[63:32]: 飛び先アドレス
+                                                        // ret[31:0]:  演算結果
+    func_self alu(pc_i, a_i, b_i, imm_i) : ret;
+    func_self shift(pc_i, a_i, b_i, imm_i) : ret;
+    func_self compare(pc_i, a_i, b_i, imm_i) : ret;
+    func_self load_store(pc_i, a_i, b_i, imm_i) : ret;
+    func_self jump(pc_i, a_i, b_i, imm_i) : ret;
 
     fetch();
 
@@ -315,274 +284,47 @@ module primitive_cpu {
     }
 
     proc execute {
-        wire rd_w[32];
-        wire rdata_w[32];
-        wire pc_ex_w[32];
+        wire unit_o[65];
+        wire branch;
+        wire jaddr[32];
+        wire result[32];
 
         any {
-            // LUI
-            inst_ex == 0b000001: {
-                rd_w = {imm_ex, 0b000000000000};
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // AUIPC
-            inst_ex == 0b000010: {
-                rd_w = {imm_ex, 0b000000000000};
-                pc_ex_w = pc_ex + rd_w;
-            }
-
-            // JAL
-            inst_ex == 0b000011: {
-                rd_w = pc_ex + 32#({imm_ex, 0b0});
-                pc_ex_w = pc_ex + 32#({imm_ex, 0b0});
-            }
-
-            // JALR
-            inst_ex == 0b000100: {
-                rd_w = pc_ex + ra + 32#(imm_ex);
-                pc_ex_w = pc_ex + ra + 32#(imm_ex);
-            }
-
-            // BEQ
-            inst_ex == 0b000101: {
-                rd_w = 0x00000000;
-                if (ra == rb) pc_ex_w = pc_ex + imm_ex;
-                else pc_ex_w = pc_ex + 4;
-            }
-
-            // BNE
-            inst_ex == 0b000110: {
-                rd_w = 0x00000000;
-                if (ra != rb) pc_ex_w = pc_ex + imm_ex;
-                else pc_ex_w = pc_ex + 4;
-            }
-
-            // BLT
-            inst_ex == 0b000111: {
-                rd_w = 0x00000000;
-                if (ra < rb) pc_ex_w = pc_ex + imm_ex;
-                else pc_ex_w = pc_ex + 4;
-            }
-
-            // BGE
-            inst_ex == 0b001000: {
-                rd_w = 0x00000000;
-                if (ra >= rb) pc_ex_w = pc_ex + imm_ex;
-                else pc_ex_w = pc_ex + 4;
-            }
-
-            // BLTU
-            inst_ex == 0b001001: {
-                rd_w = 0x00000000;
-                if (ra < rb) pc_ex_w = pc_ex + imm_ex;
-                else pc_ex_w = pc_ex + 4;
-            }
-
-            // BGEU
-            inst_ex == 0b001010: {
-                rd_w = 0x00000000;
-                if (ra >= rb) pc_ex_w = pc_ex + imm_ex;
-                else pc_ex_w = pc_ex + 4;
-            }
-
-            // LB
-            inst_ex == 0b001011: {
-                rdata_w = read(ra + 32#(imm_ex));
-                rd_w = 32#(rdata_w[7:0]);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // LH
-            inst_ex == 0b001100: {
-                rdata_w = read(ra + 32#(imm_ex));
-                rd_w = 32#(rdata_w[15:0]);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // LW
-            inst_ex == 0b001101: {
-                rdata_w = read(ra + 32#(imm_ex));
-                rd_w = rdata_w;
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // LBU
-            inst_ex == 0b001011: {
-                rdata_w = read(ra + 32#(imm_ex));
-                rd_w = 32'(rdata_w[7:0]);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // LHU
-            inst_ex == 0b001100: {
-                rdata_w = read(ra + 32#(imm_ex));
-                rd_w = 32'(rdata_w[15:0]);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SB
-            inst_ex == 0b010000: {
-                rdata_w = read(ra + 32#(imm_ex));
-                write(ra + 32#(imm_ex), {rdata_w[31:8], rb[7:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SH
-            inst_ex == 0b010001: {
-                rdata_w = read(ra + 32#(imm_ex));
-                write(ra + 32#(imm_ex), {rdata_w[31:16], rb[15:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SW
-            inst_ex == 0b010010: {
-                write(ra + 32#(imm_ex), rb);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // ADDI
-            inst_ex == 0b010011: {
-                rd_w = a32.exec(0b0001, ra, 32#(imm_ex));
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SLTI
-            inst_ex == 0b010100: {
-                if (ra < 32#(imm_ex)) rd_w = 0x00000001;
-                else rd_w = 0x00000000;
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SLTIU
-            inst_ex == 0b010101: {
-                if (ra < 32'(imm_ex)) rd_w = 0x00000001;
-                else rd_w = 0x00000000;
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // XORI
-            inst_ex == 0b010110: {
-                rd_w = a32.exec(0b0101, ra, 32#(imm_ex));
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // ORI
-            inst_ex == 0b010111: {
-                rd_w = a32.exec(0b0100, ra, 32#(imm_ex));
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // ANDI
-            inst_ex == 0b011000: {
-                rd_w = a32.exec(0b0011, ra, 32#(imm_ex));
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SLLI
-            inst_ex == 0b011001: {
-                rd_w = s32.shiftLeftL(ra, {0b0, imm_ex[4:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SRLI
-            inst_ex == 0b011010: {
-                rd_w = s32.shiftRightL(ra, {0b0, imm_ex[4:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SRAI
-            inst_ex == 0b011011: {
-                rd_w = s32.shiftRightA(ra, {0b0, imm_ex[4:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // ADD
-            inst_ex == 0b011100: {
-                rd_w = a32.exec(0b0001, ra, rb);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SUB
-            inst_ex == 0b011101: {
-                rd_w = a32.exec(0b0010, ra, rb);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SLL
-            inst_ex == 0b011110: {
-                rd_w = s32.shiftLeftL(ra, {0b0, rb[4:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SLT
-            inst_ex == 0b011111: {
-                if (ra < rb) rd_w = 0x00000001;
-                else rd_w = 0x00000000;
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SLTU
-            inst_ex == 0b100000: {
-                if (33'(ra) < 33'(rb)) rd_w = 0x00000001;
-                else rd_w = 0x00000000;
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // XOR
-            inst_ex == 0b100001: {
-                rd_w = a32.exec(0b0101, ra, rb);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SRL
-            inst_ex == 0b100010: {
-                rd_w = s32.shiftRightL(ra, {0b0, rb[4:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // SRA
-            inst_ex == 0b100011: {
-                rd_w = s32.shiftRightA(ra, {0b0, rb[4:0]});
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // OR
-            inst_ex == 0b100100: {
-                rd_w = a32.exec(0b0100, ra, rb);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // AND
-            inst_ex == 0b100101: {
-                rd_w = a32.exec(0b0011, ra, rb);
-                pc_ex_w = pc_ex + 4;
-            }
-
-            // FENCE
-            inst_ex == 0b100110: pc_ex_w = pc_ex + 4;
-
-            // ECALL
-            inst_ex == 0b100111: pc_ex_w = pc_ex + 4;
-
-            // EBREAK
-            inst_ex == 0b101000: pc_ex_w = pc_ex + 4;
+            inst_ex.ALU: unit_o = alu();
+            inst_ex.SFT: unit_o = shift();
+            inst_ex.CMP: unit_o = compare();
+            inst_ex.LS: unit_o = load_store();
+            inst_ex.JMP: unit_o = jump();
         }
-
-        writeback(rname_d_ex, rd_w, pc_ex_w);
+        branch = unit_o[64];
+        jaddr = unit_o[63:32];
+        result = unit_o[31:0];
+        
+        writeback(rname_d_ex, result, jaddr);
     }
 
     proc writeback {
         r32.write(rname_d_wb, rd);
-        if (pc_wb != pc_ex + 4) flush();
         finish();
     }
 
-    func flush {
-        fetch.finish();
-        decode.finish();
-        register_fetch.finish();
-        execute.finish();
-        writeback.finish();
+    func alu {
+        return 0;
+    }
+
+    func shift {
+        return 0;
+    }
+
+    func compare {
+        return 0;
+    }
+
+    func load_store {
+        return 0;
+    }
+
+    func jump {
+        return 0;
     }
 }
