@@ -14,7 +14,8 @@ module dpram(
     input we1;
     input we2;
 
-    reg [7:0] mem [4095:0];
+    parameter MEM_CAPACITY = 4096;
+    reg [7:0] mem [(MEM_CAPACITY - 1):0];
     integer i;
 
     always @(posedge m_clock) begin
@@ -36,9 +37,15 @@ module dpram(
     end
 
     initial begin
-        for (i = 0; i < 4096 / 4; i += 4) begin
+        for (i = 0; i < MEM_CAPACITY / 4; i += 4) begin
             // addi zero, zero, 0
-            mem[i] = 8'h13;
+            // mem[i] = 8'h13;
+            // mem[i + 1] = 8'h00;
+            // mem[i + 2] = 8'h00;
+            // mem[i + 3] = 8'h00;
+
+            // jalr zero, zero, 0
+            mem[i] = 8'b01100111;
             mem[i + 1] = 8'h00;
             mem[i + 2] = 8'h00;
             mem[i + 3] = 8'h00;
