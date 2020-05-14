@@ -127,15 +127,23 @@ struct inst {
 };
 
 declare primitive_cpu {
-    // デュアルポートメモリとのインタフェース
-    output addr1[32];    // アドレス1
-    output addr2[32];    // アドレス2
-    output wdata[32];    // writeするデータ
-    input rdata[32];     // readデータ
+    // 命令メモリとのインタフェース
+    output addr1_i[32];    // アドレス1
+    output addr2_i[32];    // アドレス2
+    output wdata_i[32];    // writeするデータ
+    input rdata_i[32];     // readデータ
+
+    // データメモリとのインタフェース
+    output addr1_d[32];    // アドレス1
+    output addr2_d[32];    // アドレス2
+    output wdata_d[32];    // writeするデータ
+    input rdata_d[32];     // readデータ
 
     // 特定のアドレスに4バイト書き込む関数
-    func_out write(addr1, wdata);
+    func_out write_i(addr1_i, wdata_i);
+    func_out write_d(addr1_d, wdata_d);
 
     // 特定のアドレスから4バイト取得する関数
-    func_out read(addr2) : rdata;
+    func_out read_i(addr2_i) : rdata_i;
+    func_out read_d(addr2_d) : rdata_d;
 }
