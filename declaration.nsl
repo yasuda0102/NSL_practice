@@ -110,6 +110,22 @@ declare dpram {
 #define FENCE        0b0001111
 #define SYSTEM       0b1110011
 
+// CPUの制御信号の構造体
+struct inst {
+    ALU;
+    SFT;
+    CMP;
+    LS;
+    JMP;
+    OP[4];
+    R;
+    I;
+    S;
+    B;
+    U;
+    J;
+};
+
 declare primitive_cpu {
     // デュアルポートメモリとのインタフェース
     output addr1[32];    // アドレス1
