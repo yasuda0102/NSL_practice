@@ -7,26 +7,31 @@ declare driver simulation {
 }
 
 module driver {
-    comparator32 c32;
-    reg counter[7] = 0;
+    primitive_cpu cpu;
+    dpram mem_inst, mem_data;
 
-    func_self test();
+    reg counter[10] = 0;
 
     counter++;
-    if (counter == 0b0000000) test();
-    if (counter == 100) _finish("Simulation End.");
+    if (counter == 255) _finish("Simulation End.");
 
-    func test seq {
-        // Signed Comparation
-        _display("0 < 1: %b", c32.exec(0b0011, 0x00000000, 0x00000001));
-        _display("0 < 0: %b", c32.exec(0b0011, 0x00000000, 0x00000000));
-        _display("-32 < 10: %b", c32.exec(0b0011, 0xffffffe0, 0x0000000a));
-        _display("0 >= 1: %b", c32.exec(0b0100, 0x00000000, 0x00000001));
-        _display("0 >= 0: %b", c32.exec(0b0100, 0x00000000, 0x00000000));
-        _display("-32 >= 10: %b", c32.exec(0b0100, 0xffffffe0, 0x0000000a));
+    func cpu.write_d {
+        mem_data.addr1 = cpu.addr1_d;
+        mem_data.wdata1 = cpu.wdata_d;
+        mem_data.we1 = 0b1;
+    }
 
-        // Unsigned Comparation
-        _display("4294967264 < 10: %b", c32.exec(0b1011, 0xffffffe0, 0x0000000a));
-        _display("4294967264 >= 10: %b", c32.exec(0b1100, 0xffffffe0, 0x0000000a));
+    func cpu.read_i {
+        mem_inst.addr2 = cpu.addr2_i;
+        mem_inst.wdata2 = 0x00000000;
+        mem_inst.we2 = 0b0;
+        return mem_inst.rdata2;
+    }
+
+    func cpu.read_d {
+        mem_data.addr2 = cpu.addr2_d;
+        mem_data.wdata2 = 0x00000000;
+        mem_data.we2 = 0b0;
+        return mem_data.rdata2;
     }
 }

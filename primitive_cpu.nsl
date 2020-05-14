@@ -67,7 +67,7 @@ module primitive_cpu {
     reg rname_d_wb[5];
     reg rd[32];
     reg pc_wb[32];
-    reg branch_wb;
+    reg branch_wb = 0b0;
     proc_name writeback(rname_d_wb, rd, pc_wb, branch_wb);
 
     fetch();
