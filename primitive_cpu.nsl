@@ -15,6 +15,9 @@ module primitive_cpu {
     // シフタ
     shifter32 s32;
 
+    // コンパレータ
+    comparator32 c32_0, c32_1;
+
     // 5段パイプラインを構成する
     // 命令フェッチ→命令デコード→レジスタフェッチ→実行→書き戻し
 
@@ -45,32 +48,33 @@ module primitive_cpu {
     reg pc_ex[32];
     proc_name execute(inst_ex, ra, rb, rname_d_ex, imm_ex, pc_ex);
 
-    // 書き戻しステージ
-    reg rname_d_wb[5];
-    reg rd[32];
-    reg pc_wb[32];
-    proc_name writeback(rname_d_wb, rd, pc_wb);
-
     // 実行ステージにおけるユニット群
     wire pc_i[32];
     wire a_i[32];
     wire b_i[32];
     wire imm_i[20];
+    
     wire ret[65];                                       // retの意味付け
                                                         // ret[64]:    分岐・ジャンプフラグ
                                                         // ret[63:32]: 飛び先アドレス
                                                         // ret[31:0]:  演算結果
     func_self alu(pc_i, a_i, b_i, imm_i) : ret;
     func_self shift(pc_i, a_i, b_i, imm_i) : ret;
-    func_self compare(pc_i, a_i, b_i, imm_i) : ret;
     func_self load_store(pc_i, a_i, b_i, imm_i) : ret;
     func_self jump(pc_i, a_i, b_i, imm_i) : ret;
+
+    // 書き戻しステージ
+    reg rname_d_wb[5];
+    reg rd[32];
+    reg pc_wb[32];
+    reg branch_wb;
+    proc_name writeback(rname_d_wb, rd, pc_wb, branch_wb);
 
     fetch();
 
     proc fetch {
         decode(read(pc), pc);
-        pc := pc + 4;
+        pc := if (branch_wb) pc_wb else pc + 4;
     }
 
     proc decode {
@@ -290,17 +294,16 @@ module primitive_cpu {
         wire result[32];
 
         any {
-            inst_ex.ALU: unit_o = alu();
-            inst_ex.SFT: unit_o = shift();
-            inst_ex.CMP: unit_o = compare();
-            inst_ex.LS: unit_o = load_store();
-            inst_ex.JMP: unit_o = jump();
+            inst_ex.ALU: unit_o = alu(pc_ex, ra, rb, imm_ex);
+            inst_ex.SFT: unit_o = shift(pc_ex, ra, rb, imm_ex);
+            inst_ex.LS: unit_o = load_store(pc_ex, ra, rb, imm_ex);
+            inst_ex.JMP: unit_o = jump(pc_ex, ra, rb, imm_ex);
         }
         branch = unit_o[64];
         jaddr = unit_o[63:32];
         result = unit_o[31:0];
-        
-        writeback(rname_d_ex, result, jaddr);
+
+        writeback(rname_d_ex, result, jaddr, branch);
     }
 
     proc writeback {
@@ -309,15 +312,49 @@ module primitive_cpu {
     }
 
     func alu {
-        return 0;
+        wire extended_imm[32];
+        wire sel_R[32];
+        wire ALU_result[32];
+        wire CMP_result[32];
+        wire LUI_result[32];
+
+        // 値を選択
+        extended_imm = if (inst_ex.OP[3]) 32#imm_i else 32'imm_i;
+        sel_R = if (inst_ex.R) b_i else extended_imm;
+
+        // ALU系演算 (ADD[I], SUB, XOR[I]], OR[I], AND[I])
+        ALU_result = a32.exec(inst_ex.OP, a_i, sel_R);
+
+        // 比較演算
+        CMP_result = 32'(c32_0.exec(inst_ex.OP, a_i, sel_R));
+
+        // LUI
+        LUI_result = (32'imm_i) << 12;
+
+        // どれを出力するか選択
+        any {
+            inst_ex.ALU: return {0b0, pc_i, ALU_result};
+            inst_ex.CMP: return {0b0, pc_i, CMP_result};
+            inst_ex.U: return {0b0, pc_i, LUI_result};
+        }
     }
 
     func shift {
-        return 0;
-    }
+        wire amount[6];
+        wire SFT_result[32];
 
-    func compare {
-        return 0;
+        // 値を選択
+        amount = if (inst_ex.R) {0b0, b_i[4:0]} else {0b0, imm_i[4:0]};
+
+        // シフト演算
+        any {
+            inst_ex.OP == 0b0001: SFT_result = s32.shiftLeftL(a_i, amount);
+            inst_ex.OP == 0b0010: SFT_result = s32.shiftRightL(a_i, amount);
+            inst_ex.OP == 0b1010: SFT_result = s32.shiftRightA(a_i, amount);
+        }
+
+        return {0b0, pc_i, SFT_result};
+
     }
 
     func load_store {
