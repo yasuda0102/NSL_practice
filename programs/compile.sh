@@ -9,4 +9,5 @@ then
 fi
 
 riscv32-unknown-elf-gcc -ffreestanding -nostartfiles -static -o $FILENAME_NOEXT $1
-riscv32-unknown-elf-objcopy -O ihex $FILENAME_NOEXT $FILENAME_NOEXT.hex
+riscv32-unknown-elf-objcopy -O binary $FILENAME_NOEXT $FILENAME_NOEXT.bin
+rm $FILENAME_NOEXT
