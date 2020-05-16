@@ -87,14 +87,11 @@ declare regfile {
 }
 
 declare dpram {
-    input addr1[32];
-    input addr2[32];
-    input wdata1[32];
-    input wdata2[32];
-    output rdata1[32];
-    output rdata2[32];
-    input we1;
-    input we2;
+    input addr_r[32];
+    input addr_w[32];
+    input wdata[32];
+    output rdata[32];
+    input we;
 }
 
 // opcodeの定義
@@ -128,22 +125,19 @@ struct inst {
 
 declare primitive_cpu {
     // 命令メモリとのインタフェース
-//  output addr1_i[32];    // アドレス1
-    output addr2_i[32];    // アドレス2
-//  output wdata_i[32];    // writeするデータ
+    output addrR_i[32];    // 命令読み出しアドレス
     input rdata_i[32];     // readデータ
 
     // データメモリとのインタフェース
-    output addr1_d[32];    // アドレス1
-    output addr2_d[32];    // アドレス2
+    output addrR_d[32];    // データ読み出しアドレス
+    output addrW_d[32];    // データ書き込みアドレス
     output wdata_d[32];    // writeするデータ
     input rdata_d[32];     // readデータ
 
     // 特定のアドレスに4バイト書き込む関数
-//  func_out write_i(addr1_i, wdata_i);
-    func_out write_d(addr1_d, wdata_d);
+    func_out write_d(addrW_d, wdata_d);
 
     // 特定のアドレスから4バイト取得する関数
-    func_out read_i(addr2_i) : rdata_i;
-    func_out read_d(addr2_d) : rdata_d;
+    func_out read_i(addrR_i) : rdata_i;
+    func_out read_d(addrR_d) : rdata_d;
 }

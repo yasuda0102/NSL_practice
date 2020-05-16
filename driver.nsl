@@ -16,22 +16,25 @@ module driver {
     if (counter == 255) _finish("Simulation End.");
 
     func cpu.write_d {
-        mem_data.addr1 = cpu.addr1_d;
-        mem_data.wdata1 = cpu.wdata_d;
-        mem_data.we1 = 0b1;
+        mem_data.addr_w = cpu.addrW_d;
+        mem_data.wdata = cpu.wdata_d;
+        mem_data.we = 0b1;
     }
 
     func cpu.read_i {
-        mem_inst.addr2 = cpu.addr2_i;
-        mem_inst.wdata2 = 0x00000000;
-        mem_inst.we2 = 0b0;
-        return mem_inst.rdata2;
+        mem_inst.addr_r = cpu.addrR_i;
+        mem_inst.addr_w = 0x00000000;
+        mem_inst.wdata = 0x00000000;
+        mem_inst.we = 0b0;
+
+        return mem_inst.rdata;
     }
 
     func cpu.read_d {
-        mem_data.addr2 = cpu.addr2_d;
-        mem_data.wdata2 = 0x00000000;
-        mem_data.we2 = 0b0;
-        return mem_data.rdata2;
+        mem_data.addr_r = cpu.addrR_d;
+        mem_data.wdata = 0x00000000;
+        mem_data.we = 0b0;
+
+        return mem_data.rdata;
     }
 }
