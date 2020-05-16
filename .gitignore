@@ -3,3 +3,4 @@ a.out
 *.vcd
 *.code-workspace
 !dpram.v
+*.bin

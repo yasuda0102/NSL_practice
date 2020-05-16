@@ -4,6 +4,8 @@ void _start(void) {
     unsigned int result;
     
     result = multiply(10, 10);
+
+    while (1) ;
 }
 
 unsigned int multiply(unsigned int a, unsigned int b) {
