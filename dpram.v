@@ -13,6 +13,7 @@ module dpram(
 
     parameter MEM_CAPACITY = 4096;
     reg [7:0] mem [(MEM_CAPACITY - 1):0];
+    integer i;
 
     always @(posedge m_clock) begin
         if (we) begin
@@ -21,6 +22,13 @@ module dpram(
             mem[addr_w + 2] <= wdata[23:16];
             mem[addr_w + 3] <= wdata[31:24];
         end
+    end
+
+    initial begin
+        for (i = 0; i < MEM_CAPACITY; i++) begin
+            mem[i] = 8'h00;
+        end
+        $readmemh("programs/multiply.txt", mem);
     end
 
     assign rdata = {mem[addr_r + 3], mem[addr_r + 2], mem[addr_r + 1], mem[addr_r]};

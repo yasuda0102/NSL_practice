@@ -12,6 +12,9 @@ module driver {
 
     reg counter[10] = 0;
 
+    if (counter < 1) cpu.res = 0b1;
+    else cpu.res = 0b0;
+
     counter++;
     if (counter == 255) _finish("Simulation End.");
 

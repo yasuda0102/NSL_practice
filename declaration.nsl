@@ -134,6 +134,9 @@ declare primitive_cpu {
     output wdata_d[32];    // writeするデータ
     input rdata_d[32];     // readデータ
 
+    // CPUのリセット信号
+    input res;
+
     // 特定のアドレスに4バイト書き込む関数
     func_out write_d(addrW_d, wdata_d);
 

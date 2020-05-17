@@ -18,7 +18,7 @@ module primitive_cpu {
     // コンパレータ
     comparator32 c32_0, c32_1;
 
-    // 5段パイプラインを構成する
+    // 5段パイプラインを構成する→マルチサイクル方式に変更
     // 命令フェッチ→命令デコード→レジスタフェッチ→実行→書き戻し
 
     // 命令フェッチステージ
@@ -70,10 +70,13 @@ module primitive_cpu {
     reg branch_wb = 0b0;
     proc_name writeback(rname_d_wb, rd, pc_wb, branch_wb);
 
-    fetch();
+    reg prev_res = 0b1;
+
+    prev_res := res;
+    if (prev_res & ~res) fetch();
 
     proc fetch {
-        decode(read_i(pc), pc);
+        decode(read_i(pc), pc + 4);
         pc := if (branch_wb) pc_wb else pc + 4;
     }
 
@@ -308,7 +311,7 @@ module primitive_cpu {
 
     proc writeback {
         r32.write(rname_d_wb, rd);
-        finish();
+        fetch();
     }
 
     func alu {
