@@ -76,8 +76,7 @@ module primitive_cpu {
     if (prev_res & ~res) fetch();
 
     proc fetch {
-        decode(read_i(pc), pc + 4);
-        pc := if (branch_wb) pc_wb else pc + 4;
+        decode(read_i(pc), pc);
     }
 
     proc decode {
@@ -311,6 +310,8 @@ module primitive_cpu {
 
     proc writeback {
         r32.write(rname_d_wb, rd);
+        pc := if (branch_wb) pc_wb else pc + 4;
+
         fetch();
     }
 
@@ -384,6 +385,7 @@ module primitive_cpu {
         wire branch_check;
         wire sel_B;
         wire final_result[32];
+        wire following_address[32];
 
         // JALの飛び先計算
         JAL_result = a_jal.exec(0b0001, pc_i, (32#imm_i) << 1);
@@ -396,14 +398,17 @@ module primitive_cpu {
 
         any {
             inst_ex.J | inst_ex.B: {
+                following_address = pc_i + 4;
                 if (sel_B) final_result = JAL_result;
                 else final_result = pc_i;
             }
             inst_ex.I: {
+                following_address = pc_i + 4;
                 if (sel_B) final_result = JALR_result;
                 else final_result = pc_i;
             }
             inst_ex.U: {
+                following_address = AUIPC_result;
                 if (sel_B) final_result = AUIPC_result;
                 else final_result = pc_i;
             }
@@ -414,6 +419,6 @@ module primitive_cpu {
 
         sel_B = if (inst_ex.B) branch_check else 0b1;
 
-        return {sel_B, final_result, final_result};
+        return {sel_B, final_result, following_address};
     }
 }
