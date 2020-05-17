@@ -386,7 +386,7 @@ module primitive_cpu {
         wire final_result[32];
 
         // JALの飛び先計算
-        JAL_result = a_jal.exec(0b0001, pc_i, 32#imm_i);
+        JAL_result = a_jal.exec(0b0001, pc_i, (32#imm_i) << 1);
 
         // JALRの飛び先計算
         JALR_result = a_jalr.exec(0b0001, a_i, 32#imm_i);
