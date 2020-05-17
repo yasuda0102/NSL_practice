@@ -4,3 +4,4 @@ a.out
 *.code-workspace
 !dpram.v
 *.bin
+*.gtkw
