@@ -15,29 +15,24 @@ module driver {
     if (counter < 1) cpu.res = 0b1;
     else cpu.res = 0b0;
 
+    mem_inst.addr_r = cpu.addrR_i;
+    mem_inst.addr_w = 0x00000000;
+    mem_inst.wdata = 0x00000000;
+    mem_inst.we = 0b0;
+
+    mem_data.addr_r = if (cpu.read_d) cpu.addrR_d else 0x00000000;
+    mem_data.addr_w = if (cpu.write_d) cpu.addrW_d else 0x00000000;
+    mem_data.wdata = if (cpu.write_d) cpu.wdata_d else 0x00000000;
+    mem_data.we = if (cpu.write_d) 0b1 else 0b0;
+
     counter++;
     if (counter == 255) _finish("Simulation End.");
 
-    func cpu.write_d {
-        mem_data.addr_w = cpu.addrW_d;
-        mem_data.wdata = cpu.wdata_d;
-        mem_data.we = 0b1;
-    }
-
     func cpu.read_i {
-        mem_inst.addr_r = cpu.addrR_i;
-        mem_inst.addr_w = 0x00000000;
-        mem_inst.wdata = 0x00000000;
-        mem_inst.we = 0b0;
-
         return mem_inst.rdata;
     }
 
     func cpu.read_d {
-        mem_data.addr_r = cpu.addrR_d;
-        mem_data.wdata = 0x00000000;
-        mem_data.we = 0b0;
-
         return mem_data.rdata;
     }
 }

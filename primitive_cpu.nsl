@@ -322,7 +322,7 @@ module primitive_cpu {
         wire LUI_result[32];
 
         // 値を選択
-        extended_imm = if (inst_ex.OP[3]) 32#imm_i else 32'imm_i;
+        extended_imm = if (~inst_ex.OP[3] | ~inst_ex.CMP) 32#imm_i else 32'imm_i;
         sel_R = if (inst_ex.R) b_i else extended_imm;
 
         // ALU系演算 (ADD[I], SUB, XOR[I]], OR[I], AND[I])
