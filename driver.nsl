@@ -26,7 +26,7 @@ module driver {
     mem_data.we = if (cpu.write_d) 0b1 else 0b0;
 
     counter++;
-    if (counter == 255) _finish("Simulation End.");
+    if (counter == 1023) _finish("Simulation End.");
 
     func cpu.read_i {
         return mem_inst.rdata;
