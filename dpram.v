@@ -19,7 +19,7 @@ module dpram(
     always @(posedge m_clock) begin
         if (we) begin
             mem[addr_w[(BIT_LENGTH - 1):0]] <= wdata[7:0];
-            mem[addr_w[(BIT_LENGTH - 1):0] + 1] <= wdata[15:0];
+            mem[addr_w[(BIT_LENGTH - 1):0] + 1] <= wdata[15:8];
             mem[addr_w[(BIT_LENGTH - 1):0] + 2] <= wdata[23:16];
             mem[addr_w[(BIT_LENGTH - 1):0] + 3] <= wdata[31:24];
         end
@@ -29,7 +29,7 @@ module dpram(
         for (i = 0; i < MEM_CAPACITY; i++) begin
             mem[i] = 8'h00;
         end
-        $readmemh("programs/multiply.txt", mem);
+        $readmemh("programs/test.txt", mem);
     end
 
     assign rdata = {

@@ -165,17 +165,17 @@ module primitive_cpu {
                     // SB
                     funct3 == 0b000: 
                         register_fetch(0b00010_0001_001000, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[21:25], instr[11:7]}), pc_de);
+                                       20#({instr[31:25], instr[11:7]}), pc_de);
 
                     // SH
                     funct3 == 0b001: 
                         register_fetch(0b00010_0010_001000, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[21:25], instr[11:7]}), pc_de);
+                                       20#({instr[31:25], instr[11:7]}), pc_de);
 
                     // SW
                     funct3 == 0b010: 
                         register_fetch(0b00010_0100_001000, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[21:25], instr[11:7]}), pc_de);
+                                       20#({instr[31:25], instr[11:7]}), pc_de);
                 }
             }
 
