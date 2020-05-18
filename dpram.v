@@ -29,7 +29,7 @@ module dpram(
         for (i = 0; i < MEM_CAPACITY; i++) begin
             mem[i] = 8'h00;
         end
-        $readmemh("programs/test.txt", mem);
+        $readmemh("programs/multiply.txt", mem);
     end
 
     assign rdata = {
