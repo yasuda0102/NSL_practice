@@ -107,32 +107,32 @@ module primitive_cpu {
                     // BEQ
                     funct3 == 0b000:
                         register_fetch(0b00001_0001_000100, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8]}), pc_de);
 
                     // BNE
                     funct3 == 0b001:
                         register_fetch(0b00001_0010_000100, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8]}), pc_de);
 
                     // BLT
                     funct3 == 0b100:
                         register_fetch(0b00001_0011_000100, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8]}), pc_de);
 
                     // BGE
                     funct3 == 0b101:
                         register_fetch(0b00001_0100_000100, instr[19:15], instr[24:20], 0b00000, 
-                                       20#({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
+                                       20#({instr[31], instr[7], instr[30:25], instr[11:8]}), pc_de);
                     
                     // BLTU
                     funct3 == 0b110:
                         register_fetch(0b00001_1011_000100, instr[19:15], instr[24:20], 0b00000, 
-                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
+                                       20'({instr[31], instr[7], instr[30:25], instr[11:8]}), pc_de);
                     
                     // BGEU
                     funct3 == 0b111:
                         register_fetch(0b00001_1100_000100, instr[19:15], instr[24:20], 0b00000, 
-                                       20'({instr[31], instr[7], instr[30:25], instr[11:8], 0b0}), pc_de);
+                                       20'({instr[31], instr[7], instr[30:25], instr[11:8]}), pc_de);
                 }
             }
 
